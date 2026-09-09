@@ -1,0 +1,28 @@
+import { z } from "zod";
+
+const serverSchema = z.object({
+  NEXT_PUBLIC_SUPABASE_URL: z.url(),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  OPENROUTER_API_KEY: z.string().min(1),
+  OPENROUTER_MODEL: z.string().min(1).default("openai/gpt-4.1-mini"),
+});
+
+const publicSchema = serverSchema.pick({
+  NEXT_PUBLIC_SUPABASE_URL: true,
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: true,
+});
+
+export function getPublicEnv() {
+  return publicSchema.parse({
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  });
+}
+
+export function getServerEnv() {
+  return serverSchema.parse({
+    ...process.env,
+    OPENROUTER_MODEL: process.env.OPENROUTER_MODEL ?? "openai/gpt-4.1-mini",
+  });
+}
