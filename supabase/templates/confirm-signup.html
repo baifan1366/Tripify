@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="{{ if eq .Data.locale "zh" }}zh{{ else if eq .Data.locale "ms" }}ms{{ else }}en{{ end }}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>Tripify</title></head>
+<body style="margin:0;padding:0;background-color:#F6F8FC;color:#07182C;font-family:Arial,'Microsoft YaHei',sans-serif;">
+{{ $title := "Your people. Your next chapter." }}
+{{ $pre := "One small step before the journey." }}
+{{ $body := "Confirm your email to open your Tripify account. Bring your people, explore the possibilities, and make the decisions together." }}
+{{ $cta := "Confirm email address" }}
+{{ $ignore := "If you didn’t create a Tripify account, you can safely ignore this email." }}
+{{ if eq .Data.locale "zh" }}
+{{ $title = "带上旅伴，开启下一章。" }}{{ $pre = "出发之前，只差这一步。" }}{{ $body = "验证邮箱，即可进入你的 Tripify 账户。带上旅伴，一起研究更合适的可能，把决定留给每个人。" }}{{ $cta = "验证邮箱地址" }}{{ $ignore = "如果你没有创建 Tripify 账户，请忽略此邮件。" }}
+{{ else if eq .Data.locale "ms" }}
+{{ $title = "Rakan anda. Bab seterusnya." }}{{ $pre = "Satu langkah sebelum perjalanan." }}{{ $body = "Sahkan e-mel untuk membuka akaun Tripify. Bawa rakan anda, teroka pilihan, dan buat keputusan bersama." }}{{ $cta = "Sahkan alamat e-mel" }}{{ $ignore = "Jika anda tidak mencipta akaun Tripify, abaikan e-mel ini." }}
+{{ end }}
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{{ $pre }}</div>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#F6F8FC;">
+<tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" width="560" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:560px;">
+<tr><td style="padding:24px 32px;background-color:#07182C;border-radius:24px 24px 0 0;">
+<span style="font-size:28px;font-weight:700;letter-spacing:-1px;color:#FFFFFF;">Tripify<span style="color:#B8DEFF;">&nbsp;↗</span></span>
+<p style="margin:16px 0 0;font-size:12px;line-height:20px;color:#B8DEFF;">{{ if eq .Data.locale "zh" }}AI 提出建议，人来做决定。{{ else if eq .Data.locale "ms" }}AI mencadangkan. Manusia memutuskan.{{ else }}AI proposes. Humans decide.{{ end }}</p>
+</td></tr>
+<tr><td style="background-color:#FFFFFF;padding:40px 32px;border-left:1px solid #D9E2ED;border-right:1px solid #D9E2ED;">
+<p style="margin:0 0 12px;color:#1765D8;font-size:12px;font-weight:700;line-height:20px;">{{ $pre }}</p>
+<h1 style="margin:0 0 20px;font-size:30px;line-height:40px;letter-spacing:-0.5px;color:#07182C;">{{ $title }}</h1>
+<p style="margin:0 0 28px;font-size:16px;line-height:27px;color:#526780;">{{ $body }}</p>
+<table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td bgcolor="#1765D8" style="border-radius:10px;text-align:center;mso-padding-alt:16px 24px;"><a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=email" style="display:inline-block;padding:16px 24px;color:#FFFFFF;font-size:15px;font-weight:700;line-height:22px;text-decoration:none;border-radius:10px;">{{ $cta }} &nbsp;↗</a></td></tr></table>
+<p style="margin:28px 0 0;font-size:13px;line-height:22px;color:#526780;">{{ if eq .Data.locale "zh" }}链接仅可使用一次。打开后，请在页面上点击确认；若已过期，请返回 Tripify 重新发送邮件。{{ else if eq .Data.locale "ms" }}Pautan ini hanya boleh digunakan sekali. Selepas membukanya, sahkan pada halaman. Jika tamat tempoh, minta e-mel baharu di Tripify.{{ else }}This link can be used once. After opening it, confirm on the page. If it has expired, request a new email in Tripify.{{ end }}</p>
+</td></tr>
+<tr><td style="padding:24px 32px;background-color:#FFFFFF;border:1px solid #D9E2ED;border-top:0;border-radius:0 0 24px 24px;">
+<p style="margin:0;font-size:12px;line-height:21px;color:#526780;">{{ $ignore }}</p>
+<p style="margin:16px 0 0;font-size:12px;line-height:21px;color:#526780;">{{ if eq .Data.locale "zh" }}按钮无法打开？复制下方链接到浏览器：{{ else if eq .Data.locale "ms" }}Butang tidak berfungsi? Salin pautan ini ke pelayar:{{ else }}Button not working? Copy this link into your browser:{{ end }}</p>
+<p style="margin:8px 0 0;font-size:11px;line-height:18px;word-break:break-all;"><a style="color:#1765D8;" href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=email">{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=email</a></p>
+</td></tr>
+<tr><td align="center" style="padding:24px;font-size:12px;line-height:20px;color:#526780;">Tripify · {{ if eq .Data.locale "zh" }}你的 AI 旅行队友{{ else if eq .Data.locale "ms" }}Rakan perjalanan AI anda{{ else }}Your AI travel teammate{{ end }}</td></tr>
+</table></td></tr></table>
+</body></html>

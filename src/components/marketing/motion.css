@@ -1,0 +1,54 @@
+/* Scene owns pin geometry; only the track moves. No negative margins. */
+html { scroll-behavior: auto; }
+.tripify-site:lang(zh) h1,.tripify-site:lang(zh) h2,.tripify-site:lang(zh) h3 { line-height:1.2;letter-spacing:-.025em; }
+.tripify-site { font-family: Arial, 'Microsoft YaHei', sans-serif; }
+.human-section { max-width: none; padding: 100px 0 0; }
+.human-section .section-intro { max-width: 800px; padding: 0 28px; margin: 0 auto 65px; }
+.decision-journey { position: relative; display: flex; flex-direction: column; justify-content: center; align-items: stretch; width: 100%; height: 100svh; min-height: 650px; margin: 0; padding: 48px 0; overflow: hidden; background: #eaf3ff; }
+.decision-journey::before,.decision-journey::after { display: none; }
+.scene-toolbar { display: flex; justify-content: space-between; align-items: center; margin: 0 auto 32px; width: min(1100px, 84%); color: #305d91; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+.scene-toolbar > div { display: flex; gap: 8px; }
+.scene-step { cursor: pointer; border: 1px solid #9dbce3; background: transparent; color: #305d91; border-radius: 50%; width: 44px; height: 44px; transition: background .2s,color .2s; }
+.scene-step:hover,.scene-step[aria-pressed=true] { background: #176bdd; color: white; }
+.scene-step:focus-visible { outline: 3px solid #176bdd; outline-offset: 4px; }
+.decision-window { width: 100%; overflow: hidden; }
+.decision-track { display: flex; gap: 28px; width: max-content; padding: 12px max(8vw, calc((100vw - 1100px) / 2)); cursor: grab; touch-action: pan-y; }
+.decision-track:active { cursor: grabbing; }
+.flow-stage { flex: 0 0 min(76vw, 1000px); width: min(76vw, 1000px); min-width: 0; min-height: 420px; padding: 48px; opacity: 1; background: #fff; border: 1px solid #afc8e6; transition: border-color .3s, background .3s; }
+.flow-stage[data-state=active] { background: #fafdff; border-color: #2679ea; }
+.flow-stage > span { font-size: 18px; top: 40px; right: 40px; }
+.flow-stage h3 { margin-top: 55px; font-size: clamp(30px,4vw,56px); }
+.flow-stage p { font-size: 18px; max-width: 570px; color: #52657d; }
+.flow-icon { width: 72px; height: 72px; }
+.flow-icon svg { width: 34px; height: 34px; }
+.flow-stage:first-child .flow-icon { animation: none; }
+.flow-stage::after { display: none; }
+.reality-section { position: relative; max-width: none; width: 100%; min-height: 100svh; padding: 70px max(6vw, calc((100vw - 1152px) / 2)); background: #f6f8fc; }
+.reality-copy h2 { font-size: clamp(36px,4vw,58px); line-height: 1.06; }
+.state-display { display: flex; align-items: center; gap: 20px; margin-bottom: 28px; color: #b1691b; font-size: 12px; font-weight: 700; }
+.state-display svg { width: 64px; height: 64px; flex: none; }
+.state-display[data-stage='1'],.state-display[data-stage='2'] { color: #176bdd; }
+.state-display[data-stage='3'] { color: #197a57; }
+.event-card,.approved { opacity: 1; transform: none; transition: background .3s, border-color .3s, box-shadow .3s; }
+.event-card { min-height: 84px; }
+.event-card[data-state=idle] { background: #edf1f6; border-color: #d4deea; box-shadow: none; }
+.event-card[data-state=active] { background: white; border-color: #2e7cf6; box-shadow: 0 0 0 5px #2e7cf619, 0 14px 30px #17477c18; }
+.event-card.delay[data-state=active] { border-color: #ce842c; box-shadow: 0 0 0 5px #ce842c19; }
+.event-card[data-state=complete] { border-color: #99b9a9; background: #f3faf6; }
+.event-card b { font-size: 16px; }.event-card span { font-size: 10px; }
+.flow-line { height: 28px; flex: none; }
+.approved[data-state=idle] { background: #e5ebf0; color: #52657d; }
+.approved[data-state=active] { box-shadow: 0 0 0 5px #197a571c; }
+@media (max-width:899px), (max-height:649px) {
+  .decision-journey { height: auto; min-height: 0; padding: 50px 0; }
+  .decision-window { overflow-x: auto; scroll-snap-type: x mandatory; }
+  .decision-track { padding: 12px 24px; gap: 16px; cursor: auto; }
+  .flow-stage { flex-basis: 82vw; width: 82vw; min-height: 360px; padding: 28px; scroll-snap-align: center; }
+  .flow-stage h3 { font-size: 30px; }.flow-stage p { font-size: 16px; }
+  .reality-section { grid-template-columns: 1fr; min-height: 0; padding: 80px 24px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .decision-journey { height:auto; min-height:0; }
+  .decision-track { width:100%; flex-direction:column; padding:24px; }
+  .flow-stage { width:100%; flex-basis:auto; }
+}

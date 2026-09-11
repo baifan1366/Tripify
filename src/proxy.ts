@@ -6,7 +6,12 @@ import { updateSession } from "@/lib/supabase/proxy";
 const handleI18nRouting = createIntlMiddleware(routing);
 
 export async function proxy(request: NextRequest) {
-  return updateSession(request, handleI18nRouting(request));
+  const response = await updateSession(request, handleI18nRouting(request));
+  if (/\/(?:auth|sign-in|sign-up|dashboard|forgot-password|reset-password)(?:\/|$)/.test(request.nextUrl.pathname)) {
+    response.headers.set("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0");
+    response.headers.set("Referrer-Policy", "no-referrer");
+  }
+  return response;
 }
 
 export const config = {
