@@ -9,10 +9,14 @@ import {
   useApiLoadingStatus,
   APILoadingStatus,
 } from "@vis.gl/react-google-maps";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { Activity } from "@/lib/mvp/model";
 import type { RouteSegment } from "@/lib/maps/types";
 import { coordinates, decodePolyline } from "@/lib/maps/adapters";
+import { TripMarker } from "./trip-marker";
+import { MapDiscovery } from "./map-discovery";
+import type { PlaceSelection } from "@/lib/maps/types";
+import { segmentTiming } from "@/lib/maps/schedule";
 
 export function GoogleCanvas({
   items,
@@ -23,6 +27,12 @@ export function GoogleCanvas({
   fit,
   routes,
   fallback,
+  destination,
+  onPlace,
+  onCustom,
+  customMode,
+  transit,
+  preview,
 }: {
   items: Activity[];
   selected?: Activity;
@@ -32,6 +42,12 @@ export function GoogleCanvas({
   fit: number;
   routes: RouteSegment[];
   fallback: React.ReactNode;
+  destination: string;
+  onPlace: (place: PlaceSelection) => void;
+  onCustom: (position: google.maps.LatLngLiteral) => void;
+  customMode: boolean;
+  transit: boolean;
+  preview?: PlaceSelection | null;
 }) {
   const t = useTranslations("shared");
   const status = useApiLoadingStatus();
@@ -73,13 +89,6 @@ export function GoogleCanvas({
         {fallback}
       </>
     );
-  if (!points.length)
-    return (
-      <>
-        <p className="travel-map-context">{t("missingCoordinates")}</p>
-        {fallback}
-      </>
-    );
   if (tilesStuck)
     return (
       <>
@@ -100,8 +109,8 @@ export function GoogleCanvas({
       <div className="google-map-canvas">
         <Map
           mapId={mapId}
-          defaultCenter={coordinates(points[0])!}
-          defaultZoom={13}
+          defaultCenter={coordinates(points[0]) ?? { lat: 20, lng: 0 }}
+          defaultZoom={points.length ? 13 : 2}
           defaultTilt={0}
           defaultHeading={0}
           gestureHandling="cooperative"
@@ -111,31 +120,46 @@ export function GoogleCanvas({
           fullscreenControl={false}
         >
           {points.map((item) => (
-            <AdvancedMarker
+            <TripMarker
               key={item.id}
-              position={coordinates(item)!}
-              title={item.title}
-            >
-              <button
-                type="button"
-                className="google-activity-pin"
-                aria-label={item.title}
-                aria-pressed={selected?.id === item.id}
-                data-hovered={hovered === item.id}
-                onClick={() => onSelect(item.id)}
-                onMouseEnter={() => onHover(item.id)}
-                onMouseLeave={() => onHover(null)}
-                onFocus={() => onHover(item.id)}
-                onBlur={() => onHover(null)}
-              >
-                {items.findIndex((a) => a.id === item.id) + 1}
-              </button>
-            </AdvancedMarker>
+              item={item}
+              index={items.findIndex((a) => a.id === item.id) + 1}
+              selected={selected?.id === item.id}
+              hovered={hovered === item.id}
+              onSelect={onSelect}
+              onHover={onHover}
+            />
           ))}
+          <MapDiscovery
+            destination={destination}
+            onPlace={onPlace}
+            onCustom={onCustom}
+            customMode={customMode}
+          />
+          <TransitContext visible={transit} />
+          {preview && (
+            <AdvancedMarker
+              position={{ lat: preview.latitude, lng: preview.longitude }}
+              zIndex={5}
+            >
+              <span className="map-preview-pin" aria-label={preview.name} />
+            </AdvancedMarker>
+          )}
           <Camera items={items} selected={selected} fit={fit} />
           <ResizeNotifier />
           {routes.map((route) => (
-            <RouteLine key={`${route.from}:${route.to}`} route={route} />
+            <RouteLine
+              key={`${route.from}:${route.to}`}
+              route={route}
+              from={items.find((a) => a.id === route.from)}
+              to={items.find((a) => a.id === route.to)}
+              active={
+                !selected ||
+                route.from === selected.id ||
+                route.to === selected.id
+              }
+              onSelect={onSelect}
+            />
           ))}
           <TilesWatchdog
             key={items.map((a) => a.id).join("|")}
@@ -198,8 +222,11 @@ function Camera({
   const lat = position?.lat,
     lng = position?.lng;
   useEffect(() => {
-    if (map && lat !== undefined && lng !== undefined)
-      map.moveCamera({ center: { lat, lng }, tilt: 0, heading: 0 });
+    if (map && lat !== undefined && lng !== undefined) {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+        map.moveCamera({ center: { lat, lng }, tilt: 0, heading: 0 });
+      else map.panTo({ lat, lng });
+    }
   }, [map, lat, lng]);
   return null;
 }
@@ -255,7 +282,33 @@ function ResizeNotifier() {
   }, [map]);
   return null;
 }
-function RouteLine({ route }: { route: RouteSegment }) {
+function TransitContext({ visible }: { visible: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!map || !visible) return;
+    const layer = new google.maps.TransitLayer();
+    layer.setMap(map);
+    return () => layer.setMap(null);
+  }, [map, visible]);
+  return null;
+}
+function RouteLine({
+  route,
+  active,
+  onSelect,
+  from,
+  to,
+}: {
+  route: RouteSegment;
+  active: boolean;
+  onSelect: (id: string) => void;
+  from?: Activity;
+  to?: Activity;
+}) {
+  const t = useTranslations("shared");
+  const m = useTranslations("mvp");
+  const locale = useLocale();
+  const conflict = from && to ? segmentTiming(from, to, route).conflict : 0;
   const path = useMemo(() => {
     try {
       return route.polyline ? decodePolyline(route.polyline) : [];
@@ -264,6 +317,51 @@ function RouteLine({ route }: { route: RouteSegment }) {
     }
   }, [route.polyline]);
   return path.length ? (
-    <Polyline path={path} strokeColor="#2e7af8" strokeWeight={4} />
+    <>
+      {active && (
+        <Polyline
+          path={path}
+          strokeColor="#ffffff"
+          strokeOpacity={0.9}
+          strokeWeight={8}
+          clickable={false}
+          zIndex={1}
+        />
+      )}
+      <Polyline
+        path={path}
+        strokeColor={active ? "#2F7DF4" : "#6B7F93"}
+        strokeOpacity={active ? 1 : 0.4}
+        strokeWeight={active ? 4 : 3}
+        zIndex={2}
+        onClick={() => onSelect(route.to)}
+      />
+      <AdvancedMarker
+        position={path[Math.floor(path.length / 2)]}
+        zIndex={active ? 6 : 2}
+      >
+        <button
+          type="button"
+          className="map-route-label"
+          data-active={active}
+          onClick={() => onSelect(route.to)}
+        >
+          {t(route.mode)} ·{" "}
+          {m("minutes", { count: Math.ceil(route.seconds / 60) })}
+          <span>
+            {new Intl.NumberFormat(locale, {
+              style: "unit",
+              unit: route.meters < 1000 ? "meter" : "kilometer",
+              maximumFractionDigits: route.meters < 1000 ? 0 : 1,
+            }).format(route.meters < 1000 ? route.meters : route.meters / 1000)}
+          </span>
+          {conflict > 0 && active && (
+            <small className="map-timing-warning">
+              {t("scheduleConflict", { minutes: conflict })}
+            </small>
+          )}
+        </button>
+      </AdvancedMarker>
+    </>
   ) : null;
 }

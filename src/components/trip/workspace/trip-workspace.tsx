@@ -24,6 +24,8 @@ import "../../workspace/workspace.css";
 import { GoogleMapProvider } from "@/lib/maps/google-map-provider";
 import { useRoutes } from "@/lib/maps/use-routes";
 import { useTripWeather } from "@/lib/maps/use-trip-weather";
+import { dayActivities } from "@/lib/maps/schedule";
+import type { WeatherDay } from "@/lib/weather/risk";
 import { AdaptiveWorkspace } from "../../workspace/adaptive-workspace";
 import type { WidgetProps } from "../../workspace/widget-content";
 
@@ -44,20 +46,14 @@ export function TripWorkspace({ trip }: { trip: Trip }) {
   const dayDate = dateAt(trip.start, day).toISOString().slice(0, 10);
   const dayRisk = weather?.days.find((d) => d.date === dayDate) ?? null;
   const items = useMemo(
-    () =>
-      trip.activities
-        .filter((a) => a.day === day)
-        .sort((a, b) => a.time.localeCompare(b.time)),
+    () => dayActivities(trip.activities, day),
     [trip.activities, day],
   );
   const activity = items.find((a) => a.id === selected) ?? items[0];
-  const handleDayChange = useCallback(
-    (next: number) => {
-      setDay(next);
-      setSelected(null);
-    },
-    [],
-  );
+  const handleDayChange = useCallback((next: number) => {
+    setDay(next);
+    setSelected(null);
+  }, []);
   const url = (view: string) => `${base}/trips/${trip.id}?view=${view}`;
   return (
     <GoogleMapProvider enabled>
@@ -135,7 +131,7 @@ function WorkspaceDock({
   items: Trip["activities"];
   activity: Trip["activities"][number] | undefined;
   hovered: string | null;
-  dayRisk: { date: string } | null;
+  dayRisk: WeatherDay | null;
   routes: ReturnType<typeof useRoutes>;
   onNavigate: (id: PanelId) => void;
   onDayChange: (day: number) => void;
@@ -152,7 +148,7 @@ function WorkspaceDock({
     hovered,
     routes,
     routing: routes,
-    dayRisk: dayRisk as never,
+    dayRisk,
     onDayChange,
     onSelect,
     onHover,

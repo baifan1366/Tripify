@@ -436,7 +436,6 @@
 .ws-widget[data-widget="plan"][data-density="medium"] .journey-rail-legacy {
   display: none;
 }
-.ws-widget[data-widget="plan"][data-density="medium"] .journey-segment,
 .ws-widget[data-widget="plan"][data-density="medium"] .journey-edit-actions {
   display: none;
 }
@@ -456,8 +455,12 @@
 .ws-widget[data-widget="chat"][data-density="compact"] .mvp-chat-messages {
   display: none;
 }
-.ws-widget[data-widget="ai"][data-density="compact"] .ai-live > section[aria-label]:not(.ai-chat),
-.ws-widget[data-widget="ai"][data-density="medium"] .ai-live > section[aria-label]:not(.ai-chat) {
+.ws-widget[data-widget="ai"][data-density="compact"]
+  .ai-live
+  > section[aria-label]:not(.ai-chat),
+.ws-widget[data-widget="ai"][data-density="medium"]
+  .ai-live
+  > section[aria-label]:not(.ai-chat) {
   display: none;
 }
 /* AI composer is pinned to the visible bottom at every density: it is the
@@ -489,8 +492,7 @@
   display: none;
 }
 .ws-widget[data-widget="people"][data-density="medium"] .shared-invite,
-.ws-widget[data-widget="people"][data-density="medium"]
-  .mvp-preferences-form {
+.ws-widget[data-widget="people"][data-density="medium"] .mvp-preferences-form {
   display: none;
 }
 /* Decisions: medium hides diffs, vote actions and the aside. */
@@ -502,14 +504,12 @@
 .ws-widget[data-widget="decisions"][data-density="medium"]
   .mvp-proposal
   textarea,
-.ws-widget[data-widget="decisions"][data-density="medium"]
-  .mvp-decision-aside,
+.ws-widget[data-widget="decisions"][data-density="medium"] .mvp-decision-aside,
 .ws-widget[data-widget="decisions"][data-density="medium"]
   .mvp-decision-layout
   > section
   > .mvp-form-actions,
-.ws-widget[data-widget="decisions"][data-density="medium"]
-  form.mvp-proposal {
+.ws-widget[data-widget="decisions"][data-density="medium"] form.mvp-proposal {
   display: none;
 }
 
@@ -578,7 +578,7 @@
 }
 .ws-widget[data-widget="map"] .google-map-canvas {
   flex: 1 1 auto;
-  min-height: 300px;
+  min-height: 220px;
   height: auto;
 }
 

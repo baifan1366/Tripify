@@ -1,6 +1,6 @@
 "use client";
 import { useLocale } from "next-intl";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type AiAskState =
   | { status: "idle" }
@@ -16,6 +16,7 @@ export function useAiAsk() {
   const locale = useLocale();
   const [state, setState] = useState<AiAskState>({ status: "idle" });
   const abortRef = useRef<AbortController | null>(null);
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   async function ask(
     tripId: string,
@@ -42,6 +43,7 @@ export function useAiAsk() {
         }),
         signal,
       });
+      if (userController.signal.aborted) return null;
       if (!response.ok || !response.body) {
         setState({ status: "error", message: "AI_UPSTREAM" });
         return null;
@@ -51,6 +53,10 @@ export function useAiAsk() {
       let buffer = "";
       for (;;) {
         const { done, value } = await reader.read();
+        if (userController.signal.aborted) {
+          await reader.cancel();
+          return null;
+        }
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
@@ -67,7 +73,11 @@ export function useAiAsk() {
           if (event.type === "token" && event.text) full += event.text;
           else if (event.type === "done") {
             full = event.text ?? full;
-            const result = { status: "done" as const, text: full, tools: event.tools ?? [] };
+            const result = {
+              status: "done" as const,
+              text: full,
+              tools: event.tools ?? [],
+            };
             setState(result);
             abortRef.current = null;
             return full.trim() ? full : null;
@@ -87,6 +97,8 @@ export function useAiAsk() {
       abortRef.current = null;
       return null;
     } catch (e) {
+      if (abortRef.current !== userController || userController.signal.aborted)
+        return null;
       if (e instanceof DOMException && e.name === "AbortError") {
         setState({ status: "idle" });
         return null;

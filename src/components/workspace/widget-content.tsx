@@ -9,7 +9,10 @@ import { DayTimeline } from "../trip/journey/day-timeline";
 import { MapPanel } from "../trip/map/map-panel";
 import { DecisionFeed } from "../trip/decision/decision-feed";
 import { SharedChat } from "../trip/chat/shared-chat";
-import { SharedProposals, useSharedProposals } from "../trip/decision/shared-proposals";
+import {
+  SharedProposals,
+  useSharedProposals,
+} from "../trip/decision/shared-proposals";
 import { BudgetPanel } from "../mvp/workspace-panels";
 import { SharedPeople } from "../trip/people/shared-people";
 import { HistoryPanel } from "../trip/history/history-panel";
@@ -94,19 +97,16 @@ export function JourneyContent(p: WidgetProps) {
 }
 
 export function MapContent(p: WidgetProps) {
-  const t = useTranslations("dock");
-  const density = useWidgetDensity();
+  const { setFocus, focusId } = useWorkspaceGrid();
   return (
     <>
-      {density === "compact" && (
-        <p className="ws-compact-only ws-map-compact">
-          {p.activity
-            ? `${p.activity.time} · ${p.activity.place}`
-            : t("emptyDay")}
-        </p>
-      )}
       <div className="ws-full-content ws-map-full">
         <MapPanel
+          key={p.trip.id}
+          trip={p.trip}
+          day={p.day}
+          onDayChange={p.onDayChange}
+          onFullscreen={() => setFocus(focusId === "map" ? null : "map")}
           items={p.items}
           selected={p.activity}
           onSelect={p.onSelect}

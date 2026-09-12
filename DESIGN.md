@@ -121,3 +121,9 @@ The narrative homepage is implemented in `journey-landing.tsx` and `journey.css`
 - **Do:** Make “AI proposes. Humans decide.” visible in every major story.
 - **Don't:** Treat AI as a silent itinerary editor.
 - **Don't:** Substitute travel imagery for evidence or present a city photograph as the actual recommended attraction.
+
+### Itinerary map workspace (2026-09-12)
+
+The map is an itinerary canvas inside the existing resizable widget. The signature is a numbered stop with a compact travel-ticket detail above it; adjacent route labels repeat the Planner's actual travel times. The toolbar is one compact row, discovery floats over the canvas, and Transit/Risk remain independent overlays. Container queries reduce secondary labels at 620px and 360px widget widths. Existing Field, AppButton, AppPopover and AppTooltip remain canonical; the placement sheet uses the installed Base UI Dialog for focus trapping, Escape and a portaled, bounded form.
+
+Runtime mapping: `src/components/trip/map/map-workspace.css` scopes the brief's `--map-route` #2F7DF4, `--map-ink` #0B1F33 and `--map-muted` #6B7F93 to itinerary graphics. Google Polyline options mirror route/neutral values because the SDK requires concrete colors. Form/action surfaces continue consuming the canonical App `--primary`, `--card`, `--foreground`, `--muted-foreground`, and `--border` tokens from globals.css. Small white action text retains the existing darker accessible action blue. No font or marketing palette changes.
