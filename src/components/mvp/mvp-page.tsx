@@ -24,10 +24,7 @@ export async function mvpMetadata(props: MvpPageProps) {
     robots: { index: false, follow: false },
   };
 }
-export async function MvpPage({
-  demo = false,
-  params,
-}: MvpPageProps & { demo?: boolean }) {
+export async function MvpPage({ params }: MvpPageProps) {
   const { locale, path = [] } = await params;
   if (
     !(
@@ -37,7 +34,7 @@ export async function MvpPage({
     )
   )
     notFound();
-  if (!demo && !(await getAuthUser()))
+  if (!(await getAuthUser()))
     redirect(
       `${localePath(locale, "/sign-in")}?next=${encodeURIComponent(localePath(locale, `/dashboard${path.length ? `/${path.join("/")}` : ""}`))}`,
     );

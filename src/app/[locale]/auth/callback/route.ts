@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { authLocale, localePath, safeAuthNext } from "@/lib/auth/paths";
+import { authURL } from "@/lib/auth/origin";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ locale: string }> }) {
   const locale = authLocale((await params).locale);
@@ -9,8 +10,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (code && !request.nextUrl.searchParams.has("error")) {
     try {
       const { error } = await (await createClient()).auth.exchangeCodeForSession(code);
-      if (!error) return NextResponse.redirect(new URL(next, request.url), { headers: { "Cache-Control": "private, no-store", "Referrer-Policy": "no-referrer" } });
+      if (!error) return NextResponse.redirect(authURL(next), { headers: { "Cache-Control": "private, no-store", "Referrer-Policy": "no-referrer" } });
     } catch { /* Show a safe localized error, never the provider's raw response or token. */ }
   }
-  return NextResponse.redirect(new URL(`${localePath(locale, "/sign-in")}?error=oauth`, request.url), { headers: { "Cache-Control": "private, no-store", "Referrer-Policy": "no-referrer" } });
+  return NextResponse.redirect(authURL(`${localePath(locale, "/sign-in")}?error=oauth`), { headers: { "Cache-Control": "private, no-store", "Referrer-Policy": "no-referrer" } });
 }

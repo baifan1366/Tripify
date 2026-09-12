@@ -1,0 +1,822 @@
+/* Flat, independently scrollable work surfaces. Business forms keep their content. */
+.app-shell:has(.travel-workspace) .app-shell-chrome {
+  position: absolute;
+  top: 8px;
+  right: 16px;
+  min-height: 44px;
+  padding: 0;
+  z-index: var(--app-z-nav);
+}
+.travel-workspace.mvp-workspace {
+  padding: 0;
+}
+.travel-workspace .mvp-trip-header {
+  min-height: 88px;
+  padding: 12px 200px 12px 24px;
+  gap: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.travel-workspace .mvp-trip-header > div:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.travel-workspace .mvp-trip-title {
+  flex-wrap: nowrap;
+  margin: 0;
+}
+.travel-workspace .mvp-trip-title h1 {
+  width: 100%;
+  flex: 1;
+  display: block;
+  min-width: 0;
+  font-size: 22px;
+  letter-spacing: 0;
+}
+.travel-workspace .app-trip-switcher {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  font-size: 22px;
+  font-weight: 650;
+}
+.travel-workspace .app-trip-switcher > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 1 auto;
+}
+.travel-workspace .mvp-trip-title > .mvp-tag {
+  flex-shrink: 0;
+}
+.travel-workspace .mvp-trip-header p {
+  margin: 0;
+  font-size: 12px;
+}
+.travel-workspace .mvp-trip-header-end {
+  gap: 16px;
+  flex-shrink: 0;
+}
+.travel-workspace .mvp-budget-mini {
+  min-height: 44px;
+  min-width: 128px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.travel-workspace .mvp-budget-mini small {
+  font-size: 12px;
+  margin-bottom: 0;
+}
+.travel-workspace .mvp-budget-mini strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.travel-workspace .mvp-avatar-group {
+  min-height: 44px;
+}
+.trip-budget-track {
+  height: 3px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--border);
+}
+.trip-budget-track i {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+}
+.travel-workspace .mvp-avatar-group > .trip-member-count {
+  width: auto;
+  height: auto;
+  margin-left: 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.dock-toolbar {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.dock-layout-actions,
+.dock-minimized {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.dock-control {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius);
+  padding: 6px 8px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.dock-responsive-switch {
+  display: none;
+}
+.dock-panels {
+  display: flex;
+  align-items: stretch;
+  overflow: auto;
+  min-height: 420px;
+  height: calc(100dvh - 140px);
+  scrollbar-gutter: stable;
+}
+.dock-panel {
+  display: none;
+  position: relative;
+  flex: 1 0 auto;
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  min-height: 0;
+}
+.dock-panel[data-state="open"] {
+  display: flex;
+  flex-direction: column;
+}
+.dock-panel:last-of-type {
+  border-right: 0;
+}
+.dock-panel[data-drop="true"] {
+  outline: 2px solid var(--primary);
+  outline-offset: -3px;
+}
+.dock-panel-heading {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  padding: 2px 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+  flex-shrink: 0;
+}
+.dock-panel-heading h2 {
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.dock-panel-heading .dock-drag {
+  min-width: 44px;
+  cursor: grab;
+}
+.dock-panel-heading .dock-drag:active {
+  cursor: grabbing;
+}
+.dock-panel-content {
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+  scrollbar-gutter: stable;
+}
+.dock-splitter {
+  position: absolute;
+  inset-block: 48px 0;
+  right: -5px;
+  width: 10px;
+  z-index: 1;
+  cursor: col-resize;
+  touch-action: none;
+}
+.dock-splitter::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 4px;
+  width: 2px;
+  background: transparent;
+}
+.dock-splitter:hover::after,
+.dock-splitter:focus-visible::after,
+.dock-splitter:active::after {
+  background: var(--primary);
+}
+.dock-splitter:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+.dock-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dock-picker button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  padding: 8px 12px;
+  min-height: 44px;
+  border-radius: var(--radius);
+}
+.dock-picker button small {
+  margin-left: auto;
+}
+.dock-picker button:disabled {
+  color: var(--disabled-foreground);
+  background: var(--disabled);
+  cursor: not-allowed;
+}
+.dock-width-label {
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+.dock-width-label input {
+  width: 100%;
+  min-height: 44px;
+  accent-color: var(--primary);
+}
+.dock-no-panels,
+.dock-storage-note {
+  padding: 16px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+.dock-workspace :is(button, select),
+.travel-map button {
+  cursor: pointer;
+  transition:
+    background-color var(--app-motion-fast) var(--app-ease-ui),
+    color var(--app-motion-fast) var(--app-ease-ui);
+}
+.dock-workspace button:hover {
+  background: var(--surface-hover);
+  color: var(--primary);
+}
+.dock-workspace button:active {
+  background: var(--accent);
+  color: var(--primary-active);
+}
+.dock-workspace :is(button, select, input, summary, a):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+.dock-workspace button:disabled {
+  cursor: not-allowed;
+  color: var(--disabled-foreground);
+  background: var(--disabled);
+}
+.journey-days {
+  border-bottom: 1px solid var(--border);
+  padding: 4px 8px 8px;
+}
+.journey-day-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.journey-day-controls button {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
+}
+.journey-day-jump {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.journey-day-jump select {
+  min-width: 0;
+  width: 100%;
+  min-height: 44px;
+  font-size: 13px;
+  color: var(--foreground);
+  background: var(--card);
+}
+.journey-day-strip {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.journey-day-strip button {
+  flex: 0 0 76px;
+  min-height: 52px;
+  padding: 6px;
+  border-radius: var(--radius);
+  border-bottom: 2px solid transparent;
+  display: grid;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.journey-day-strip button[aria-pressed="true"] {
+  color: var(--primary);
+  background: var(--accent);
+  border-color: var(--primary);
+  font-weight: 600;
+}
+.journey-day-strip small {
+  font-size: 12px;
+}
+.journey-timezone {
+  margin: 8px 16px 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.dock-panel .mvp-timeline {
+  padding: 12px 12px 24px;
+  overflow: visible;
+}
+.dock-panel .mvp-timeline-stop {
+  display: block;
+  padding-left: 28px;
+  margin-bottom: 8px;
+}
+.dock-panel .mvp-timeline-dot {
+  position: absolute;
+  margin-top: 0;
+  top: 12px;
+  left: 0;
+}
+.dock-panel .mvp-activity-card {
+  width: 100%;
+  padding: 10px 12px;
+  border-color: transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  gap: 4px;
+}
+.dock-panel .mvp-activity-card[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--primary);
+}
+.dock-panel
+  .mvp-activity-card
+  :is(strong, small, .mvp-activity-time, .mvp-activity-bottom) {
+  font-size: 12px;
+}
+.dock-panel .mvp-activity-card strong {
+  font-size: 14px;
+}
+.dock-panel .mvp-activity-card:not([aria-pressed="true"]) .mvp-activity-bottom {
+  display: none;
+}
+.journey-segment {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.dock-panel .mvp-inline-empty {
+  padding: 24px 12px 8px;
+  text-align: left;
+}
+.dock-panel .mvp-add-activity {
+  margin-top: 8px;
+}
+.dock-panel[data-panel="map"] {
+  background: var(--map-land);
+}
+.travel-map {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.travel-map-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.travel-map-controls button {
+  min-height: 44px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: var(--radius);
+  font-size: 12px;
+}
+.travel-map-controls button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--primary);
+}
+.travel-map .mvp-route-map {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 440px;
+}
+.travel-map .mvp-map-canvas {
+  flex: 1;
+  min-height: 360px;
+  aspect-ratio: auto;
+}
+.travel-map .mvp-map-selection {
+  background: var(--card);
+  padding: 12px 16px;
+}
+.travel-map .mvp-map-selection :is(small, p) {
+  font-size: 12px;
+}
+.travel-map .mvp-map-pin[data-risk="true"] > span {
+  color: var(--status-warning-fg);
+  border-color: var(--status-warning-fg);
+}
+.travel-map-context,
+.travel-map-footnote {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+  background: var(--card);
+}
+.travel-map[data-lens="transit"] .mvp-map-route {
+  opacity: 0.3;
+}
+.travel-map[data-lens="risk"] .mvp-map-route {
+  opacity: 0.45;
+}
+.decision-feed {
+  padding: 12px 16px 24px;
+}
+.decision-context {
+  display: grid;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+}
+.decision-context :is(small, span),
+.decision-event small {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.decision-context strong {
+  font-size: 14px;
+}
+.decision-event {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.decision-event > svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--primary);
+}
+.decision-event > div {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.decision-event :is(h3, h4, strong) {
+  font-size: 13px;
+  font-weight: 600;
+}
+.decision-event p {
+  margin: 6px 0;
+}
+.decision-event dl {
+  display: flex;
+  gap: 20px;
+  margin: 10px 0;
+}
+.decision-event dt {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.decision-event dd {
+  font-family: var(--trip-font-mono);
+  color: var(--primary);
+}
+.decision-event summary {
+  min-height: 44px;
+  padding: 10px 0;
+  cursor: pointer;
+  color: var(--primary);
+}
+.decision-event summary:hover {
+  color: var(--primary-hover);
+}
+.decision-alert > svg {
+  color: var(--status-warning-fg);
+}
+.decision-applied > svg,
+.decision-applied h3 {
+  color: var(--status-success-fg);
+}
+.decision-quiet {
+  color: var(--muted-foreground);
+  font-size: 13px;
+  padding: 12px;
+}
+.dock-panel[data-panel="chat"] .dock-panel-content {
+  display: flex;
+  flex-direction: column;
+}
+.dock-panel .mvp-chat-messages {
+  flex: 1;
+  padding: 16px;
+}
+.dock-panel .mvp-composer {
+  flex-shrink: 0;
+}
+.dock-panel :is(.mvp-decision-layout, .mvp-budget-layout) {
+  display: block;
+  padding: 12px;
+}
+.dock-panel .mvp-card {
+  padding: 16px;
+  border-radius: 0;
+  border: 0;
+  margin-bottom: 12px;
+}
+.dock-panel .mvp-diff {
+  grid-template-columns: 1fr;
+}
+.dock-panel .mvp-proposal-metrics {
+  flex-wrap: wrap;
+}
+.dock-panel .mvp-form-grid {
+  grid-template-columns: 1fr;
+}
+.dock-panel .mvp-work-detail {
+  padding: 12px;
+}
+.travel-workspace .dock-mobile-nav {
+  display: none;
+}
+@media (max-width: 1199px) {
+  .travel-workspace .mvp-trip-header {
+    padding: 8px 190px 8px 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .travel-workspace .mvp-trip-header > div:first-child {
+    flex-basis: 100%;
+  }
+  .travel-workspace .mvp-trip-header-end {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .dock-layout-actions,
+  .dock-minimized,
+  .dock-panel-menu,
+  .dock-drag,
+  .dock-splitter {
+    display: none !important; /* Desktop manipulation has no narrow-screen equivalent; use the view switcher. */
+  }
+  .dock-responsive-switch {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    width: 100%;
+  }
+  .dock-responsive-switch select {
+    min-height: 44px;
+    flex: 1;
+    min-width: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px;
+  }
+  .dock-panels {
+    height: auto;
+    min-height: calc(100dvh - 200px);
+    overflow: visible;
+  }
+  .dock-panel[data-state] {
+    display: none;
+  }
+  .dock-panel[data-active="true"],
+  .dock-panel[data-companion="true"] {
+    display: flex;
+    flex: 1 1 50% !important;
+    min-width: 0 !important;
+    max-width: none !important; /* Override persisted desktop widths, never overwrite preferences. */
+  }
+  .dock-panel-content {
+    overflow: visible;
+  }
+  .dock-no-panels {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .app-shell:has(.travel-workspace) .app-shell-chrome {
+    position: static;
+    min-height: 44px;
+    padding: 0 12px;
+  }
+  .travel-workspace .mvp-trip-header {
+    padding: 4px 12px 8px;
+  }
+  .travel-workspace .mvp-trip-header-end {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .travel-workspace .mvp-avatar-group > span:not(.trip-member-count) {
+    display: none;
+  }
+  .travel-workspace .mvp-trip-title > .mvp-tag {
+    display: none;
+  }
+  .travel-workspace .app-trip-switcher {
+    font-size: 20px;
+  }
+  .dock-toolbar {
+    padding: 4px 12px;
+  }
+  .dock-panels {
+    display: block;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+  .dock-panel[data-companion="true"] {
+    display: none;
+  }
+  .dock-panel[data-active="true"] {
+    display: flex;
+    border-right: 0;
+  }
+  .travel-workspace .dock-mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    z-index: var(--app-z-nav);
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom);
+    gap: 0;
+  }
+  .dock-mobile-nav a {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 11px;
+  }
+  .dock-mobile-nav a:last-child {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dock-workspace :is(button, select),
+  .travel-map button {
+    transition: none;
+  }
+}
+.google-map-canvas {
+  flex: 1;
+  min-height: 420px;
+  width: 100%;
+}
+.google-activity-pin {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  border: 2px solid white;
+  font-weight: 700;
+  cursor: pointer;
+}
+.google-activity-pin[aria-pressed="true"],
+.google-activity-pin[data-hovered="true"] {
+  outline: 4px solid var(--accent);
+  transform: scale(1.12);
+}
+.mvp-activity-card[data-hovered="true"] {
+  border-color: var(--primary);
+}
+.places-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.places-field gmp-place-autocomplete {
+  width: 100%;
+  color-scheme: light;
+}
+.shared-chat-status {
+  padding: 8px 16px;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+}
+.mvp-chat-bubble time {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+.mvp-chat-bubble p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.travel-route-tools {
+  padding: 8px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.travel-route-tools label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.travel-route-tools select,
+.travel-route-tools button {
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.travel-route-tools p {
+  width: 100%;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+}
+.history-entry {
+  border-top: 1px solid var(--border);
+  padding: 12px 0;
+}
+.history-entry summary {
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  min-height: 44px;
+}
+.history-entry time {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+.history-entry dl > div {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.history-entry dt {
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+}
+.history-entry dd {
+  margin: 4px 0 0;
+}
+.shared-trip-settings summary {
+  cursor: pointer;
+  min-height: 44px;
+}
+.shared-trip-settings form {
+  display: grid;
+  gap: 12px;
+}
+.journey-edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+}
+.schematic-activity-list {
+  display: grid;
+  border-top: 1px solid var(--border);
+}
+.schematic-activity-list button {
+  text-align: start;
+  padding: 12px 16px;
+  min-height: 44px;
+  border-bottom: 1px solid var(--border);
+}
+.schematic-activity-list button[aria-pressed="true"] {
+  color: var(--primary);
+  background: var(--accent);
+}

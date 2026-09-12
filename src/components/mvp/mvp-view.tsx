@@ -23,12 +23,30 @@ import {
 } from "@/lib/mvp/model";
 import { useMvp } from "./mvp-provider";
 import { AppButton, Field, SectionHeading, EmptyState } from "./primitives";
-import { TripWorkspace } from "./trip-workspace";
+import { TripWorkspace } from "@/components/trip/workspace/trip-workspace";
+import { createSharedTrip, sharedError } from "@/lib/trips/repository";
+import { AcceptInvite } from "@/components/trip/people/shared-people";
 
 export function MvpView({ path }: { path: string[] }) {
   const t = useTranslations("mvp");
-  const { trips, base } = useMvp();
+  const { trips, base, loading, loadError, refreshTrips } = useMvp();
+  const shared = useTranslations("shared");
   const search = useSearchParams();
+  if (loading)
+    return (
+      <main className="mvp-page" role="status">
+        {shared("loading")}
+      </main>
+    );
+  if (loadError && !trips.length)
+    return (
+      <main className="mvp-page">
+        <p role="alert">{shared("failed")}</p>
+        <AppButton onClick={() => void refreshTrips().catch(() => {})}>
+          {shared("retry")}
+        </AppButton>
+      </main>
+    );
   if (path[0] === "trips" && path[1] === "new") return <CreateTrip />;
   if (path[0] === "trips") {
     const trip = trips.find((item) => item.id === path[1]);
@@ -70,6 +88,7 @@ export function MvpView({ path }: { path: string[] }) {
 
 function TripCard({ trip, view = "plan" }: { trip: Trip; view?: string }) {
   const t = useTranslations("mvp");
+  const shared = useTranslations("shared");
   const { base } = useMvp();
   const locale = useLocale();
   const date = (value: string) =>
@@ -99,7 +118,9 @@ function TripCard({ trip, view = "plan" }: { trip: Trip; view?: string }) {
           <circle cx="55" cy="115" r="7" fill="currentColor" />
           <circle cx="370" cy="65" r="7" fill="currentColor" />
         </svg>
-        <span className="mvp-pill">{t(trip.demo ? "demo" : "draft")}</span>
+        <span className="mvp-pill">
+          {trip.version ? shared("shared") : t("draft")}
+        </span>
         <strong>{trip.destination}</strong>
         <span className="mvp-trip-art-arrow">
           <ArrowRight size={22} />
@@ -154,6 +175,7 @@ function TripList() {
         </Link>
       </SectionHeading>
       <p className="mvp-lead">{t("intro")}</p>
+      <AcceptInvite />
       <div className="mvp-list-toolbar">
         <h2>
           {t("seeAll")} <span>{trips.length}</span>
@@ -226,34 +248,25 @@ function TripList() {
           )}
         </EmptyState>
       )}
-      <section className="mvp-demo-callout">
-        <span className="mvp-demo-sign" aria-hidden="true">
-          ✦
-        </span>
-        <div>
-          <h2>{t("human")}</h2>
-          <p>{t("aiExample")}</p>
-        </div>
-        <Link className="mvp-inline-link" href="/demo/trips/tokyo">
-          {t("openDemo")}
-          <ArrowRight size={16} />
-        </Link>
-      </section>
     </main>
   );
 }
 
 function CreateTrip() {
   const t = useTranslations("mvp");
-  const { draft, setDraft, setTrips, setNotice, viewer, base } = useMvp();
+  const shared = useTranslations("shared");
+  const { draft, setDraft, setNotice, viewer, base, refreshTrips } = useMvp();
+  const [pending, setPending] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const update = (key: keyof TripDraft, value: string) => {
     setDraft((d) => ({ ...d, [key]: value }));
     setErrors((e) => ({ ...e, [key]: "" }));
   };
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (pending) return;
     const form = event.currentTarget;
     const errors: Record<string, string> = {};
     for (const key of ["name", "destination", "start", "end"] as const)
@@ -278,30 +291,19 @@ function CreateTrip() {
         ?.focus();
       return;
     }
-    const trip: Trip = {
-      ...draft,
-      name: draft.name.trim(),
-      destination: draft.destination.trim(),
-      id: crypto.randomUUID(),
-      demo: false,
-      budget: Number(draft.budget),
-      activities: [],
-      members: [
-        {
-          id: "me",
-          name: viewer.name || t("you"),
-          interests: "",
-          dislikes: "",
-          food: "",
-          pace: "balanced",
-          budget: 0,
-        },
-      ],
-    };
-    setTrips((all) => [...all, trip]);
-    setDraft(emptyDraft);
-    setNotice(t("created"));
-    router.push(base);
+    setPending(true);
+    setSaveError("");
+    try {
+      const id = await createSharedTrip(draft, viewer.name);
+      setDraft(emptyDraft);
+      setNotice(shared("saved"));
+      await refreshTrips();
+      router.push(`${base}/trips/${id}`);
+    } catch (e) {
+      setSaveError(shared(sharedError(e)));
+    } finally {
+      setPending(false);
+    }
   }
   return (
     <main className="mvp-page mvp-form-page">
@@ -386,14 +388,15 @@ function CreateTrip() {
           hint="Asia/Tokyo · Asia/Kuala_Lumpur · Europe/Paris"
           required
         />
-        <p className="mvp-hint">{t("previewNote")}</p>
+        <p className="mvp-hint">{shared("sharedNote")}</p>
+        {saveError && <p role="alert">{saveError}</p>}
         <div className="mvp-form-actions">
           <Link className="mvp-inline-link" href={base}>
             {t("cancel")}
           </Link>
-          <AppButton type="submit">
+          <AppButton type="submit" disabled={pending}>
             <Plus size={16} />
-            {t("createDraft")}
+            {pending ? shared("pending") : shared("create")}
           </AppButton>
         </div>
       </form>
@@ -403,23 +406,16 @@ function CreateTrip() {
 
 function Account() {
   const t = useTranslations("mvp");
-  const { viewer, demo } = useMvp();
+  const { viewer } = useMvp();
   return (
     <main className="mvp-page mvp-form-page">
       <SectionHeading title={t("account")} />
-      <p className="mvp-lead">{t(demo ? "demoAccount" : "accountIntro")}</p>
+      <p className="mvp-lead">{t("accountIntro")}</p>
       <section className="mvp-card mvp-account">
         <ShieldCheck size={30} />
-        <h2>{demo ? "Tripify" : viewer.name}</h2>
-        {!demo && <p>{viewer.email}</p>}
-        <p className="mvp-muted">{t("previewNote")}</p>
-        {demo ? (
-          <Link className="mvp-link-button" href="/sign-in">
-            {t("signIn")}
-          </Link>
-        ) : (
-          <AuthActionForm logout buttonClassName="mvp-button" />
-        )}
+        <h2>{viewer.name}</h2>
+        <p>{viewer.email}</p>
+        <AuthActionForm logout buttonClassName="mvp-button" />
       </section>
     </main>
   );

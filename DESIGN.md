@@ -69,13 +69,25 @@ Controls use the shared 0.625rem radius. Information cards use 1.5rem. Route mar
 
 ## Components
 
+### Shared MVP adoption (2026-09-12)
+
+The current request extends the existing shell, not the marketing design. Authenticated trips now use Supabase reads and transactional RPCs; public demo data and proposal/voting fixtures remain local. The compact header distinguishes Shared trip from Local draft. Eight flat dock surfaces include History, with persistent local panel preferences and no travel data in localStorage.
+
+People uses initials, current-user/creator labels, a single-use code and inline removal confirmation. Chat is a chronological group feed with sender/time, retry and reconnect states; no automatic AI reply. Places keeps an authored title separate from its canonical location. Maps use saved coordinates and server-computed route geometry, with a labeled schematic/list fallback. History presents localized field differences and explicit stale-version recovery, never raw JSON. Existing App tokens and Base UI controls remain canonical; no global state library was added.
+
+The following original adoption notes describe the earlier preview phase; the current shared-data contract is in docs/SHARED_MVP_IMPLEMENTATION.md and the dated override in UX-CONTRACT.md.
+
 ### MVP workspace adoption (2026-09-11)
 
 The `/dashboard` now opens an authenticated, initially empty trip workspace; account details moved to `/dashboard/account`. `/demo` is a separate public fixture, never a bypass to user data. Both explicitly label this phase as an in-memory UI preview: refresh or switching locale can reset drafts, and no trip data is written to Supabase. `UX-CONTRACT.md` owns the cross-screen interaction contract; `database.sql` records a three-table design only, not an applied migration.
 
 `src/components/mvp/` owns the shared shell, AppButton adapter over the existing shadcn/Base UI Button, associated fields, and trip views. It adopts the existing App theme with 16px product cards, 10px controls, 44px actions, and 16/20/24/32px layout spacing. Marketing's 24px cards remain intentional. The default desktop workspace follows the plan's itinerary/map/AI hierarchy; tablet reduces columns and mobile uses five bottom destinations with People available in the trip header. Detail forms use document scrolling, not the timeline's bounded panel scrolling.
 
-Interaction motion is limited to short hover/press transitions. No homepage ScrollTrigger pinning enters the workspace. The map is explicitly schematic; sample alerts, forecasts and proposals are fixtures. Approve and Apply are separate transitions, stale sample activities block application, and a new trip has no invented activities, votes or forecast. All three UI locales share these behaviors. Global scrollbar colors now use named runtime tokens with a forced-colors fallback. The development badge is disabled because it overlapped mobile navigation; runtime errors still surface.
+Interaction motion permits short hover/press and data-driven GSAP day/route/confirmed-apply transitions under styleRule.md §7. Reduced motion immediately updates readable state; animation never owns business state. No homepage ScrollTrigger pinning enters the workspace. The map is explicitly schematic until map integration; sample alerts, forecasts and proposals are fixtures. Approve and Apply are separate transitions, stale sample activities block application, and a new trip has no invented activities, votes or forecast. All three UI locales share these behaviors. Global scrollbar colors use named runtime tokens with a forced-colors fallback. The Next development badge is disabled because it overlapped mobile navigation; runtime errors still surface.
+
+### Map-first shell adoption
+
+The approved migration starts with a 72px desktop rail, horizontal mobile rail, Trip Switcher and account disclosure containing locale links. `src/components/app-shell/` owns these surfaces. Shared AppPopover/AppTooltip in `src/components/ui/` wrap Base UI for focus, dismissal and collision handling, with App theme tokens on the portal positioner. The always-visible in-memory badge replaces the dominant preview banner in every environment. Domain styles live in app-shell.css rather than expanding mvp.css. Canonical globals.css maps styleRule.md's navigation 20 / popover 40 layers to --app-z-nav / --app-z-popover, and 120ms / cubic-bezier(.2,0,0,1) to --app-motion-fast / --app-ease-ui. Marketing and auth palettes are unchanged.
 
 ### Authentication adoption (2026-09-10)
 

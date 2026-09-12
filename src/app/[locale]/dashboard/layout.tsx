@@ -19,8 +19,8 @@ export default async function DashboardLayout({
   const name = user.user_metadata.display_name ?? user.user_metadata.full_name;
   return (
     <MvpProvider
-      demo={false}
       viewer={{
+        id: user.id,
         name: typeof name === "string" ? name : "Tripify",
         email: user.email ?? "",
       }}

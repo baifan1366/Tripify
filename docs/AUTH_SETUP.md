@@ -15,7 +15,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 - URL、Publishable Key：Supabase 项目的 Connect / API Keys 中获取。它们可以用于前端，不等于管理权限。
-- `NEXT_PUBLIC_APP_URL` 是已有应用归属配置；认证跳转在浏览器中取当前 origin，不依赖它猜测部署域名。
+- `NEXT_PUBLIC_APP_URL` 只用于应用归属配置，不控制认证域名。认证统一由 `src/lib/auth/origin.ts` 读取 `NODE_ENV`：`production` → `https://tripify-agent.vercel.app`，`development`（及测试）→ `http://localhost:3000`。`next dev` 自动使用 development，`next build` / `next start` 使用 production，无需在 `.env` 手动设置 NODE_ENV。
+- 注册验证、重发验证、重置密码、Google 回调及登录成功跳转共用上述域名。非目标域名的认证页面会先跳到目标域名再开始登录，避免跨域丢失 PKCE/session Cookie。生产构建的 Vercel Preview 和本地 `next start` 也会跳到正式域名，这是当前按 NODE_ENV 的规则。
 - 本认证流程不需要 `SUPABASE_SERVICE_ROLE_KEY`、数据库密码、OpenRouter Key。
 - **不要**把 Supabase Secret / service_role 或 Google Client Secret 放到任何 `NEXT_PUBLIC_*` 变量。
 - 更改环境变量后重启 Next.js；生产环境的 public 变量需要重新构建。
@@ -27,7 +28,7 @@ Authentication → Providers / Sign In → Email：启用 Email 与 Confirm emai
 
 Authentication → URL Configuration：
 
-- Site URL：开发可设 `http://localhost:3000`；正式上线改为实际 HTTPS 域名。
+- Site URL：设为 `https://tripify-agent.vercel.app`，开发请求通过显式 redirectTo 使用 localhost。
 - Redirect URLs 至少加入以下精确地址（英文不带 `/en`）：
 
 ```text
@@ -41,7 +42,18 @@ http://localhost:3000/ms/auth/confirm
 
 Google 登录使用不带查询参数的精确 callback 地址，成功后进入当前语言的 Dashboard，避免白名单因为额外查询参数不匹配。
 
-正式部署重复加入同路径的 HTTPS 地址。Preview 域名单独按需添加；生产不使用宽泛 `**` 白名单。不要混用 `127.0.0.1` 和 `localhost`，Cookie 与 PKCE verifier 属于不同 origin。
+正式地址也必须加入（本次代码修改不会自动更改 Supabase Dashboard）：
+
+```text
+https://tripify-agent.vercel.app/auth/callback
+https://tripify-agent.vercel.app/zh/auth/callback
+https://tripify-agent.vercel.app/ms/auth/callback
+https://tripify-agent.vercel.app/auth/confirm
+https://tripify-agent.vercel.app/zh/auth/confirm
+https://tripify-agent.vercel.app/ms/auth/confirm
+```
+
+生产不使用宽泛 `**` 白名单。不要混用 `127.0.0.1` 和 `localhost`，Cookie 与 PKCE verifier 属于不同 origin。参见 [Supabase Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls)。
 
 ## 3. Google OAuth：两个不同的回调
 

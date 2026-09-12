@@ -183,6 +183,57 @@
   width: 44px;
   height: 44px;
 }
+/* Success toasts float above content instead of pushing layout around. */
+.mvp-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(480px, calc(100vw - 32px));
+  padding: 10px 8px 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 12px 32px rgb(7 24 44 / 18%);
+  font-size: 13px;
+  transform: translateX(-50%);
+  animation: mvp-toast-in 180ms ease-out;
+}
+.mvp-toast > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mvp-toast > span::before {
+  content: "";
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-success-fg);
+}
+.mvp-toast button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  color: var(--muted-foreground);
+}
+@keyframes mvp-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
 .mvp-page {
   max-width: 1280px;
   margin: auto;
@@ -1892,4 +1943,48 @@
   .mvp-map-pin > span {
     border-color: ButtonText;
   }
+}
+/* Shared data controls reuse the workspace palette and compact field rhythm. */
+.shared-panel {
+  padding: 16px;
+}
+.shared-member {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.shared-member > div:nth-child(2) {
+  flex: 1 1 120px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.shared-member small {
+  display: block;
+}
+.shared-member > div:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.shared-invite,
+.shared-join form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+.shared-join {
+  margin-block: 16px;
+  max-width: 560px;
+}
+.shared-join summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.shared-panel [role="alert"] {
+  color: var(--destructive);
 }

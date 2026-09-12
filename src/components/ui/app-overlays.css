@@ -1,0 +1,98 @@
+.app-popover-positioner {
+  z-index: var(--app-z-popover);
+  font-family: var(--trip-font-sans);
+}
+.app-popover {
+  width: min(320px, calc(100vw - 24px));
+  max-height: var(--available-height);
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--foreground) 12%, transparent);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.app-popover-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-left: 8px;
+  font-weight: 600;
+}
+.app-popover-heading button {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius);
+}
+.app-popover a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.app-popover a[aria-current] {
+  color: var(--primary);
+  background: var(--accent);
+}
+.app-popover :is(a, button) {
+  cursor: pointer;
+  transition:
+    background-color var(--app-motion-fast) var(--app-ease-ui),
+    color var(--app-motion-fast) var(--app-ease-ui);
+}
+.app-popover :is(a, button):hover {
+  background: var(--surface-hover);
+  color: var(--primary);
+}
+.app-popover :is(a, button):active {
+  background: var(--accent);
+  color: var(--primary-active);
+}
+.app-popover :is(a, button):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.app-popover p {
+  margin: 8px 12px 16px;
+  color: var(--muted-foreground);
+  overflow-wrap: anywhere;
+}
+.app-popover-divider {
+  border-top: 1px solid var(--border);
+  margin: 8px 0;
+}
+.app-popover-languages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+}
+.app-popover-languages a {
+  flex: 1;
+  justify-content: center;
+}
+.app-tooltip {
+  max-width: min(240px, calc(100vw - 24px));
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--foreground);
+  color: var(--card);
+  font-size: 12px;
+  line-height: 1.5;
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-popover :is(a, button) {
+    transition: none;
+  }
+}

@@ -1,20 +1,35 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { getServerEnv } from "@/lib/env";
+import { getAiConfig } from "@/lib/ai/config";
 
-/** Creates the single Tripify agent's model through OpenRouter, not a provider-specific SDK. */
-export function createTravelModel() {
-  const env = getServerEnv();
-
+/**
+ * Centralized Tripify model factory (server-side only).
+ * All agent variants (fast / reasoning / fallback) should be added here
+ * so model selection never spreads across the codebase.
+ *
+ * Pass an explicit `apiKey` when rotating through a key pool; otherwise
+ * the first configured key is used. Keys must never leave the server.
+ */
+export function createTravelModel(
+  apiKey?: string,
+  variant: "default" = "default",
+) {
+  const config = getAiConfig();
+  void variant;
   return new ChatOpenAI({
-    apiKey: env.OPENROUTER_API_KEY,
-    model: env.OPENROUTER_MODEL,
-    temperature: 0.2,
+    apiKey: apiKey ?? config.apiKey,
+    model: config.model,
+    temperature: 0.4,
+    maxRetries: 0,
     configuration: {
       baseURL: "https://openrouter.ai/api/v1",
       defaultHeaders: {
-        "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+        "HTTP-Referer": config.appUrl,
         "X-Title": "Tripify",
       },
     },
   });
+}
+
+export function tripThreadId(tripId: string, userId: string) {
+  return `trip:${tripId}:user:${userId}`;
 }

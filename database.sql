@@ -1,130 +1,107 @@
--- Tripify / Stage 1 数据结构设计 / 2026-09-11
--- 状态：设计草案，不是已部署 schema，也不是可直接应用的 migration。
--- 本文件全部为注释：执行本文件不会创建或修改任何表。
--- 当前页面数据仅在 React 内存中；刷新即清空。远程 Supabase 本轮新增 0 张表。
--- 依据：实现方案 §§12–17、24–36、43–47；本次要求“页面先行，按需建表”。
+-- Tripify 数据库设计与迁移索引 / 2026-09-12
+-- 本文件只包含注释，执行本文件不会创建或修改任何表。
+-- 可执行迁移：supabase/migrations/20260911123531_shared_trip_core.sql
+-- 状态：代码和隔离 PostgreSQL 测试已实现；未自动应用到远程 Supabase。
+-- 请勿将本文件当作已经部署的 schema。上线前先检查远程已有同名对象。
 --
--- 第一批建议只有 3 张业务表：
---   trips           行程卡片、创建表单、工作台 header、预算上限。
---   trip_members    成员列表 + 每个成员在这次旅行中的偏好（一对一先合并）。
---   trip_activities 每个活动一行，支持逐项修改；不把整个 itinerary 存 JSON。
--- 身份仍由 auth.users 管理，不新增重复的 users 表，不复制 email/password/token。
+-- 本批只有 6 张表（不包含 Supabase 自带 auth.users）：
 --
--- 页面 -> 存储映射：
--- Trip.start/end/budget/timezone -> trips.start_date/end_date/budget_total/timezone
--- Member.id -> trip_members.user_id（正式接入时换成真实 Auth UUID，不保存 me/charlie）
--- Member.name -> trip_members.display_name（行程内称呼，不作为权限依据）
--- Member.food/budget -> trip_members.food_preferences/budget_limit
--- Activity.day/time/place/cost/duration -> day_number/start_time/location_name/
---                                        estimated_cost/duration_minutes
--- Activity.x/y 是演示图百分比坐标，不能当经纬度写入数据库。
--- Trip.demo、临时提示、搜索词、选中活动、当前 tab、示例天气也不入库。
-
-/*
--- 下列 DDL 仅供审阅。上线前必须完成文末的权限、事务和测试清单。
-
-create table public.trips (
-  id uuid primary key default gen_random_uuid(),
-  created_by uuid not null references auth.users(id) on delete restrict,
-  name text not null check (char_length(btrim(name)) between 1 and 100),
-  destination text not null check (char_length(btrim(destination)) between 1 and 120),
-  start_date date not null,
-  end_date date not null,
-  timezone text not null, -- IANA 时区；写入端须校验 pg_timezone_names 中存在。
-  currency text not null check (currency in ('MYR', 'USD', 'JPY', 'CNY', 'SGD', 'EUR')),
-  budget_total numeric(12,2) not null check (budget_total >= 0),
-  version bigint not null default 1 check (version > 0),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  check (end_date >= start_date)
-);
-
--- version 是实现方案 §17 指定的冲突检测字段，而不是装饰状态。
--- 后端写操作须原子校验旧 version 并递增；当前未实现这些写操作。
--- created_by 表示创建者，不能被普通成员改写。最终权限不从 user_metadata 读取。
--- 本地表单 1–60 天为预览边界，不把它当成已确认的永久产品限制。
-
-create table public.trip_members (
-  trip_id uuid not null references public.trips(id) on delete restrict,
-  user_id uuid not null references auth.users(id) on delete restrict,
-  display_name text not null check (char_length(btrim(display_name)) between 1 and 100),
-  interests text not null default '' check (char_length(interests) <= 400),
-  dislikes text not null default '' check (char_length(dislikes) <= 400),
-  food_preferences text not null default '' check (char_length(food_preferences) <= 400),
-  pace text not null default 'balanced' check (pace in ('slow', 'balanced', 'active')),
-  budget_limit numeric(12,2) check (budget_limit >= 0), -- null=未填写；0=明确为零。
-  joined_at timestamptz not null default now(),
-  primary key (trip_id, user_id)
-);
-
--- 不单独建 trip_preferences：当前每个成员/行程只有一组简单偏好。
--- 当需要偏好历史、独立隐私权限或多套偏好时，再拆表。
--- 不提前设计邀请 token、管理员 role、组织、权限矩阵等字段。
--- 用户称呼可来自已验证身份的显示资料，但绝不能用于授权判断。
-
-create table public.trip_activities (
-  id uuid primary key default gen_random_uuid(),
-  trip_id uuid not null references public.trips(id) on delete restrict,
-  day_number smallint not null check (day_number > 0),
-  start_time time(0) without time zone not null,
-  title text not null check (char_length(btrim(title)) between 1 and 160),
-  location_name text not null check (char_length(btrim(location_name)) between 1 and 200),
-  duration_minutes smallint not null check (duration_minutes between 1 and 1440),
-  estimated_cost numeric(12,2) not null default 0 check (estimated_cost >= 0)
-);
-
--- 日期由 start_date + day_number - 1 派生，不同时保存 day/date 两份可漂移的数据。
--- start_time 是目的地本地钟表时间，不能直接当 UTC；跨日/DST 转换由写入端处理。
--- 按 (day_number, start_time, id) 确定顺序；当前不提供拖拽，因此不加 position。
--- 活动逐条保存，不加 metadata 万能 JSON；描述、预订链接、坐标有真实 UI 再加。
-
-create index trips_creator_idx on public.trips (created_by, created_at desc);
-create index trip_members_user_idx on public.trip_members (user_id, trip_id);
-create index trip_activities_timeline_idx
-  on public.trip_activities (trip_id, day_number, start_time, id);
-
--- 安全基线（同样只是草案）：默认拒绝，不发布任何读写 API。
-alter table public.trips enable row level security;
-alter table public.trip_members enable row level security;
-alter table public.trip_activities enable row level security;
-revoke all on public.trips, public.trip_members, public.trip_activities
-  from public, anon, authenticated, service_role;
--- 不创建 permissive policy，不为解决权限错误引入 SECURITY DEFINER。
--- 这不是“可用的 RLS 实现”：明确禁用访问，等待业务权限确认与独立测试。
-*/
-
--- 不需要落库的派生值：
---   行程天数 = end_date - start_date + 1
---   成员数量 = count(trip_members)
---   已排活动估算 = sum(trip_activities.estimated_cost)，币种取 trips.currency
---   剩余额度 = budget_total - 已排活动估算（可为负，不隐藏超额）
---   预测值/组适配分/步行距离：当前只是样例，不保存假 AI 输出。
---   budget_total 是团队总额，budget_limit 是个人偏好，不能重复求和充当支出。
-
--- 后续按真实功能逐批增加（此处仅记录触发条件，不建空表）：
--- 1. 真实共享讨论上线 -> chat_messages；需要发送者、时间、权限与幂等发送。
--- 2. 真实 Human-in-the-loop -> proposals / proposal_changes / proposal_votes；
---    必须一起设计 base_trip_version、审批规则、唯一投票、原子应用和冲突恢复。
---    页面里 4/4 的示例不是最终投票规则；AI 不能绕过审批直接更新活动。
--- 3. 真实地理服务 -> 活动坐标/地图提供商引用；先无地图缓存/路线表。
--- 4. Observer、研究溯源、撤销历史真正需要时，才讨论 events/sources/snapshots。
--- 不建支付、订票、分账、向量库、独立预算汇总、全局用户偏好等超出本阶段的表。
-
--- 转成 migration 前的必做项（这轮未执行，不能当已验证上线）：
--- [ ] 确认成员读取偏好的范围、谁能编辑活动/邀请/移除成员、创建者离开后的规则。
--- [ ] 确认删除/保留政策；目前 FK RESTRICT 只作保护，不提供删除功能。
--- [ ] 确认全新项目还是已有同名表，先只读检查；绝不覆盖已有数据。
--- [ ] 明确 RLS SELECT/INSERT/UPDATE 的 USING + WITH CHECK、列级可修改范围，
---     以及显式最小 GRANT；测试 A/B 两组互不可见、成员不能自加进另一行程。
--- [ ] 原子创建 trip + 创建者 membership；原子修改 activity + version/updated_at。
--- [ ] 在事务中校验 day_number 在行程日期范围内；修改日期不能留下越界活动。
--- [ ] 服务端校验 IANA timezone、金额上界/精度、长度、身份；前端仅辅助校验。
--- [ ] 写入前保留版本比较；并发修改失败返回可恢复的冲突，不静默覆盖。
--- [ ] 本地 Postgres 约束/RLS/并发测试 + Supabase advisors；再由 CLI 生成 migration。
--- [ ] 授权后才应用远程；接入成功前，页面继续保留“内存预览”提示。
+-- public.trips
+--   id uuid PK; created_by uuid -> auth.users; name; destination;
+--   start_date/end_date date; timezone IANA; currency; budget_total numeric(12,2);
+--   version bigint default 1; created_at/updated_at timestamptz.
+--   日期含首尾，1–60 天是当前 MVP 操作边界，不是永久产品承诺。
+--   日期非 infinite，结束不能早于开始；金额 0..9999999999.99。
+--   timezone 通过 pg_timezone_names 触发器校验，不从界面语言推断。
 --
--- 参考（核对于 2026-09-11）：
--- https://supabase.com/docs/guides/api/securing-your-api
--- https://supabase.com/docs/guides/database/postgres/row-level-security
--- https://supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically
--- GRANT 决定表能否被访问，RLS 决定哪些行能访问，必须分别设计和验证。
+-- public.trip_members
+--   PK(trip_id,user_id); trip_id -> trips; user_id -> auth.users;
+--   display_name; interests; dislikes; food_preferences; pace;
+--   budget_limit nullable numeric(12,2); joined_at timestamptz.
+--   不暴露 auth.users 或复制 email/password。显示名称绝不用于授权。
+--   偏好属于该次行程，目前共享成员可读；真实偏好编辑留待单独的权限设计。
+--   null budget_limit = 未填写；0 = 明确零。UI 当前按 0 展示空预算。
+--
+-- public.trip_activities
+--   id uuid PK; trip_id -> trips; day_number; start_time time without time zone;
+--   title; location_name; latitude nullable; longitude nullable;
+--   google_place_id nullable; duration_minutes; estimated_cost numeric(12,2);
+--   created_at/updated_at timestamptz.
+--   经纬度必须同时有值/同时为空；Place ID 有值则必须有坐标。
+--   Google 地点名称和用户活动标题分开。手动地点不猜测坐标。
+--   日期 = trips.start_date + day_number - 1；RPC 检查范围。
+--   演示用 x/y 不是经纬度，绝不落库。
+--
+-- public.chat_messages
+--   id uuid PK; trip_id -> trips; user_id -> auth.users; content (1..2000);
+--   message_type(user/system/ai/recommendation/proposal/alert);
+--   client_message_id nullable uuid; created_at/updated_at timestamptz.
+--   UNIQUE(trip_id,user_id,client_message_id) 保证重试幂等。
+--   当前 RPC 强制 auth.uid() 和 user 类型；不能伪造 AI 消息或发送者。
+--   当前客户端总是发送 client_message_id；同 ID 不同文本拒绝。
+--
+-- public.trip_versions
+--   id uuid PK; trip_id -> trips; version bigint; actor_user_id -> auth.users;
+--   change_type; summary; snapshot jsonb; created_at timestamptz.
+--   UNIQUE(trip_id,version)。snapshot 只含 trip + activities，绝不含聊天或成员偏好。
+--   change_type = trip.created/trip.updated/activity.added/activity.updated/activity.removed。
+--   无变化的保存拒绝 NO_CHANGES，不生成噪声版本。没有恢复/回滚按钮。
+--
+-- public.trip_invites
+--   id uuid PK; trip_id -> trips; created_by -> auth.users; token_hash;
+--   expires_at; accepted_at nullable; created_at.
+--   仅保存 SHA-256 摘要。64 位十六进制邀请码由两个随机 UUID 生成；
+--   原始码只在创建响应中返回一次，客户端内存展示，不入本地布局存储。
+--   单次使用，72 小时有效。已登录用户显式提交邀请码后接受。
+--
+-- 权限 / RLS：
+--   6 表全部开启 RLS，authenticated 显式最小 SELECT。
+--   创建者/成员可读行程、成员、活动、聊天、历史；外部用户全部不可读。
+--   邀请元信息只有创建者可读，token_hash 不授予浏览器 SELECT。
+--   authenticated/anon 无直接 INSERT/UPDATE/DELETE 权限。
+--   创建者可修改行程/活动、邀请、移除他人；不能移除自己。
+--   普通成员只读行程/活动/历史，可发送聊天，不具备行程编辑权。
+--   所有授权使用 auth.uid()，不使用 email、display_name 或 user_metadata。
+--
+-- 公共 RPC（SECURITY INVOKER）：
+--   trip_create(p_data,p_display_name)
+--   trip_mutate(p_trip,p_expected_version,p_operation,p_entity,p_data)
+--   trip_invite_create(p_trip)
+--   trip_invite_accept(p_token,p_display_name)
+--   trip_member_remove(p_trip,p_user)
+--   trip_chat_send(p_trip,p_content,p_client_message_id)
+--
+-- 私有 schema tripify_private 不得加入 Data API 的 exposed schemas。
+--   受限 SECURITY DEFINER 用于无递归 RLS 成员检查，以及禁止绕过事务 RPC 的写入。
+--   明确空 search_path、逐项白名单字段、函数内 auth.uid() 检查和 EXECUTE GRANT。
+--   不给浏览器直接执行历史记录 helper 的权限。
+--   public 包装函数为 invoker，调用私有实现；正常请求无需 service-role key。
+--
+-- 事务：
+--   行程创建 + 创建者成员 + version 1 历史原子提交。
+--   变更先锁 trips 行，再验证 expectedVersion，修改实体、version+1、写历史。
+--   任一步失败整笔回滚。旧版本报 VERSION_CONFLICT，不静默覆盖。
+--   成员变化/聊天不递增 itinerary version，不存聊天快照。
+--   邀请接受/移除按 trip -> invite 顺序锁定；发送与成员移除串行检查权限。
+--
+-- Realtime：
+--   publication 存在时加入 trips/trip_members/trip_activities/chat_messages。
+--   不修改 Supabase 受保护的 realtime schema 对象。
+--   UI 断线/焦点恢复重新查询，并每 15 秒校验权限；移除后数据库立即拒绝读取。
+--
+-- 不新增：proposals/votes、组织、订单、支付、分账、地图缓存表、预算汇总表、向量表。
+--   这些都不是本批真实功能。演示提案仍是独立内存 fixture。
+--   panel order/width/open/collapsed/hidden 是 localStorage UI 偏好，不进这些表。
+--
+-- 验证：
+--   scripts/shared-trip-db.test.cjs：PGlite PostgreSQL WASM，隔离 Auth role shim。
+--   已覆盖 RLS、邀请码、消息幂等、版本冲突、失败原子回滚。
+--   不等同原生 PostgreSQL 多连接并发或线上 Auth/PostgREST/Realtime 验证。
+--   UI 及部署清单详见 docs/SHARED_MVP_IMPLEMENTATION.md。
+--
+-- 应用远程前仍需：
+--   1. 明确授权、测试项目和已有 schema 兼容性；不要覆盖同名表。
+--   2. 测试项目先迁移并运行 Supabase security/performance advisors。
+--   3. 验证 Data API exposed schemas 不含 tripify_private。
+--   4. 两个真实账号联测聊天、邀请、成员移除和并发版本写入。
+--   5. 确认备份、保留及删除政策。当前不提供删除行程/账号功能。

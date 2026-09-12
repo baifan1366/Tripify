@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { localePath, safeAuthNext } from "@/lib/auth/paths";
+import { authURL } from "@/lib/auth/origin";
 
 export type AuthMode = "signIn" | "signUp" | "forgot" | "reset";
 
@@ -44,7 +45,7 @@ export function AuthForm({ mode, configured, next, initialError }: { mode: AuthM
     finally { lock.current = false; setBusy(false); }
   }
 
-  const confirmURL = () => `${window.location.origin}${localePath(locale, "/auth/confirm")}`;
+  const confirmURL = () => authURL(localePath(locale, "/auth/confirm"));
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -67,11 +68,11 @@ export function AuthForm({ mode, configured, next, initialError }: { mode: AuthM
       if (mode === "signIn") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) { setError(explain(error)); return; }
-        window.location.assign(destination);
+        window.location.assign(authURL(destination));
       } else if (mode === "signUp") {
         const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: confirmURL(), data: { display_name: name, locale } } });
         if (error) { setError(explain(error)); return; }
-        if (data.session) { window.location.assign(destination); return; }
+        if (data.session) { window.location.assign(authURL(destination)); return; }
         setEmailSent(email); setSent(true); setCooldown(60); form.reset();
       } else if (mode === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: confirmURL() });
@@ -87,7 +88,7 @@ export function AuthForm({ mode, configured, next, initialError }: { mode: AuthM
 
   function google() {
     void run(async () => {
-      const callback = new URL(localePath(locale, "/auth/callback"), window.location.origin);
+      const callback = new URL(authURL(localePath(locale, "/auth/callback")));
       const { error } = await createClient().auth.signInWithOAuth({ provider: "google", options: { redirectTo: callback.toString() } });
       if (error) setError(error.status === 429 ? t("rateLimit") : t("googleError"));
     });

@@ -5,7 +5,10 @@ const serverSchema = z.object({
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   OPENROUTER_API_KEY: z.string().min(1),
-  OPENROUTER_MODEL: z.string().min(1).default("openai/gpt-4.1-mini"),
+  OPENROUTER_MODEL: z
+    .string()
+    .min(1)
+    .default("google/gemma-4-26b-a4b-it:free"),
 });
 
 const publicSchema = serverSchema.pick({
@@ -32,6 +35,7 @@ export function isAuthConfigured() {
 export function getServerEnv() {
   return serverSchema.parse({
     ...process.env,
-    OPENROUTER_MODEL: process.env.OPENROUTER_MODEL ?? "openai/gpt-4.1-mini",
+    OPENROUTER_MODEL:
+      process.env.OPENROUTER_MODEL ?? "google/gemma-4-26b-a4b-it:free",
   });
 }

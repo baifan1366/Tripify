@@ -1,5 +1,24 @@
 # UX Contract
 
+## Current shared-data contract (2026-09-12)
+
+This section supersedes the older preview-only descriptions below for authenticated routes. Demo routes keep their original in-memory behavior and proposal rules.
+
+- Authority: the user's four-system MVP brief explicitly defines creator/member permissions. Creator edits trip and activities, invites/removes others; members read all trip content and send chat. Outsiders cannot access any trip data. Identity is auth.uid(), never display text or email.
+- Data: six local migration tables are specified in database.sql. The migration has not been remotely deployed. Missing schema/network failures show errors and retry, not fake saved trips.
+- UI preferences: localStorage holds only dock order/width/visibility; selected view is URL-backed. Domain state is fetched from Supabase. All panel instances stay mounted while hidden/reordered, preserving unsent drafts and subscriptions. Leaving the trip or reloading may discard unsent input; no offline durable-draft promise.
+- Shared writes: awaited RPC result, busy state and error recovery. Edits capture a starting version; conflicts retain input and require explicit acknowledgement of the newly fetched version before retry. No-op saves do not create history. No automatic trip restore is provided.
+- Members: creator shares a one-use 72-hour invite code, recipient accepts from the trip list. No email lookup or auth.users exposure. Remove requires inline confirmation, not a browser confirm. Creator cannot remove themselves. Shared preferences are read-only until separately specified.
+- Chat: messages persisted with idempotency IDs; failed send retries same ID. Composer survives panel changes and respects IME. Realtime insert events trigger authorized reads; reconnect/focus and periodic reconciliation recover missed data. No AI-generated answers or fake votes. Removal denies server reads immediately; displayed state is revalidated within 15 seconds/on focus.
+- Maps: client restricted public key for Maps JavaScript + Places; server-only key for Routes/Time Zone. Selection shares the Journey activity ID. Route requests are explicit, time/distance are actual returned estimates, not trip-date transit schedules. Missing key/coordinates/API leaves itinerary and labeled schematic/list usable. Camera operations use immediate moveCamera.
+- History: readonly snapshots of trip/activity changes, no chat. Typed field differences with localized dates/currency; no raw JSON. The History panel also contains creator-only trip settings and explicit timezone lookup/save.
+- Responsive: desktop dock reorder/resize plus keyboard menu/range/separator alternatives. Tablet uses active panel and map companion; mobile single view plus secondary People/History switcher. All en/zh/ms labels remain localized; user data stays original.
+- Verification scope: actual test outcomes and manual setup blockers are in docs/SHARED_MVP_IMPLEMENTATION.md. Fixture UI tests are not live Supabase/Google tests. No remote database changes were made.
+
+## Historical UI-preview contract
+
+The sections below record the earlier UI-only phase and continue to apply to /demo where not superseded above.
+
 ## Product context
 
 - Audience: groups planning travel and comparing preferences, schedule and budget trade-offs.
@@ -76,15 +95,22 @@ Implementation plan refers to `Tripify — MVP Development Plan & Todo List.md` 
 - Every supported route has a localized title with Tripify suffix and noindex. Invalid path shapes use Next not-found; a refreshed missing draft uses an app-owned explanation/back link.
 - Desktop: sidebar + itinerary/map/AI columns. Tablet: plan/map or chat. Mobile: Plan, Map, Chat, Decisions, Budget bottom links; People through member avatars in trip header.
 - Detail forms scroll naturally. Only the tall desktop timeline/chat panels scroll internally. Page bottoms reserve space for fixed mobile navigation and safe area.
-- Long authored content wraps; selected activity details are not tooltip-only. UI does not use modals or custom composite popups in this slice.
+- Long authored content wraps; selected activity details are not tooltip-only. AppPopover owns non-modal shell disclosures: native Tab/link navigation, Escape/outside dismissal, trigger focus restoration and viewport collision handling. These are navigation disclosures, not ARIA menus with arrow-key semantics.
 
 ## Overlays and feedback
 
 - Local-success banner persists until dismissed or replaced; it is not proof of a cloud write.
-- Permanent preview banner explains in-memory lifetime and simulated AI/maps.
+- An always-visible in-memory preview badge opens details explaining reset limitations and simulated AI/maps. It remains visible in production prototypes, not only development.
 - No `alert`, `confirm`, `prompt`, destructive mutation, invitation send or clipboard export.
 - Refresh, leaving the provider layout, and locale switches may clear drafts. This intentionally limited prototype has no durable recovery; persistent saving and guarded unsaved navigation are release requirements for the backend phase.
-- z-index 20 is reserved for mobile view navigation; no competing product overlay is introduced.
+- Runtime layer tokens reserve 20 for navigation and 40 for shell popovers/tooltips, following styleRule.md. Portaled disclosures inherit App theme tokens and remain within the viewport.
+
+### Map-first shell migration
+
+- AppRail owns compact navigation with localized names and AppTooltip. Mobile uses a horizontal rail separate from workspace view navigation.
+- TripSwitcher lists actual in-memory trips, marks the active trip and links to Create trip. No invented shared trips or decision counts.
+- AccountMenu contains account, preferences, official site and locale links. Locale navigation preserves query parameters; the preview reset limitation still applies.
+- Shared AppPopover and AppTooltip wrap existing Base UI. The former is a non-modal disclosure, not a modal or ARIA menu.
 
 ## Async and resilience
 

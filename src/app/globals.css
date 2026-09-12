@@ -6,6 +6,10 @@
 
 /* styleRule v1: opt-in App theme; marketing retains its existing scene colors. */
 .trip-app-theme {
+  --app-z-nav: 20;
+  --app-z-popover: 40;
+  --app-motion-fast: 120ms;
+  --app-ease-ui: cubic-bezier(.2, 0, 0, 1);
   color-scheme: light;
   --background: #f6f8fc;
   --foreground: #07182c;

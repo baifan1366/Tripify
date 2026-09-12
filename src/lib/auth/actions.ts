@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { authLocale, localePath } from "./paths";
+import { authURL } from "./origin";
 
 export async function confirmEmail(_previous: { error: boolean }, form: FormData) {
   const locale = authLocale(form.get("locale"));
@@ -13,7 +14,7 @@ export async function confirmEmail(_previous: { error: boolean }, form: FormData
     const { error } = await (await createClient()).auth.verifyOtp({ token_hash: tokenHash, type });
     if (error) return { error: true };
   } catch { return { error: true }; }
-  redirect(localePath(locale, type === "recovery" ? "/reset-password" : "/dashboard"));
+  redirect(authURL(localePath(locale, type === "recovery" ? "/reset-password" : "/dashboard")));
 }
 
 export async function signOut(_previous: { error: boolean }, form: FormData) {
