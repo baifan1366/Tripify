@@ -42,3 +42,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/diagram-design
+/docs/pitch/build-deck.js
+/docs/pitch/fix_ppr.py
+/docs/video-script.md
