@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1000 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="tripify-tree-title tripify-tree-desc">
+      <title id="tripify-tree-title">Root causes of group travel stress</title>
+      <desc id="tripify-tree-desc">Group travel stress branches into four root causes: information scattered across apps, conflicting member preferences, no shared decision process, and plans invalidated when reality changes.</desc>
+      <defs>
+      <style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Sans+TC:wght@400;500;600&amp;family=Noto+Serif+TC:wght@400&amp;display=swap');</style>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- Connectors (orthogonal bus, before nodes) -->
+      <path d="M 300,246 H 340 Q 348,246 348,238 V 96 Q 348,88 356,88 H 400" fill="none" stroke="#4f5d75" stroke-width="1"/>
+      <path d="M 300,246 H 340 Q 348,246 348,254 V 192 Q 348,200 356,200 H 400" fill="none" stroke="#4f5d75" stroke-width="1"/>
+      <path d="M 300,246 H 340 Q 348,246 348,254 V 296 Q 348,304 356,304 H 400" fill="none" stroke="#4f5d75" stroke-width="1"/>
+      <path d="M 300,246 H 340 Q 348,246 348,238 V 392 Q 348,400 356,400 H 400" fill="none" stroke="#4f5d75" stroke-width="1"/>
+
+      <!-- Root (focal) -->
+      <rect x="80" y="210" width="220" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="80" y="210" width="220" height="72" rx="6" fill="#eb6c36" fill-opacity="0.08" stroke="#eb6c36" stroke-width="1"/>
+      <rect x="88" y="216" width="64" height="12" rx="2" fill="none" stroke="#eb6c36" stroke-opacity="0.40" stroke-width="0.8"/>
+      <text x="120" y="225" fill="#eb6c36" fill-opacity="0.80" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PROBLEM</text>
+      <text x="190" y="248" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Group Travel Stress</text>
+      <text x="190" y="266" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">deciding together, not searching</text>
+
+      <!-- Causes -->
+      <rect x="400" y="60" width="280" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="400" y="60" width="280" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="408" y="66" width="44" height="12" rx="2" fill="none" stroke="#2d3142" stroke-opacity="0.40" stroke-width="0.8"/>
+      <text x="430" y="75" fill="#2d3142" fill-opacity="0.80" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CAUSE</text>
+      <text x="540" y="98" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Information Scattered</text>
+      <text x="540" y="116" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">flights · hotels · maps · prices</text>
+
+      <rect x="400" y="164" width="280" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="400" y="164" width="280" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="408" y="170" width="44" height="12" rx="2" fill="none" stroke="#2d3142" stroke-opacity="0.40" stroke-width="0.8"/>
+      <text x="430" y="179" fill="#2d3142" fill-opacity="0.80" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CAUSE</text>
+      <text x="540" y="202" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Conflicting Preferences</text>
+      <text x="540" y="220" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">budget · interests · pace · walking</text>
+
+      <rect x="400" y="268" width="280" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="400" y="268" width="280" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="408" y="274" width="44" height="12" rx="2" fill="none" stroke="#2d3142" stroke-opacity="0.40" stroke-width="0.8"/>
+      <text x="430" y="283" fill="#2d3142" fill-opacity="0.80" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CAUSE</text>
+      <text x="540" y="306" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">No Decision Process</text>
+      <text x="540" y="324" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">lost threads · no votes · one decider</text>
+
+      <rect x="400" y="372" width="280" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="400" y="372" width="280" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="408" y="378" width="44" height="12" rx="2" fill="none" stroke="#2d3142" stroke-opacity="0.40" stroke-width="0.8"/>
+      <text x="430" y="387" fill="#2d3142" fill-opacity="0.80" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CAUSE</text>
+      <text x="540" y="410" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Reality Changes</text>
+      <text x="540" y="428" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">delays · weather · closures</text>
+
+      <!-- Editorial aside -->
+      <text x="736" y="246" fill="#7a8399" font-size="14" font-family="'Instrument Serif', serif" font-style="italic">No existing tool treats</text>
+      <text x="736" y="266" fill="#7a8399" font-size="14" font-family="'Instrument Serif', serif" font-style="italic">group decision-making</text>
+      <text x="736" y="286" fill="#7a8399" font-size="14" font-family="'Instrument Serif', serif" font-style="italic">as the primary model.</text>
+    </svg>
