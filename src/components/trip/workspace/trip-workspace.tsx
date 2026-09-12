@@ -15,23 +15,17 @@ import { TripHeader } from "@/components/app-shell/trip-header";
 import { dateAt, dayCount, type Trip } from "@/lib/mvp/model";
 import { panelIds, type PanelId } from "@/lib/mvp/workspace-layout";
 import { useMvp } from "@/components/mvp/mvp-provider";
-import { BudgetPanel } from "@/components/mvp/workspace-panels";
-import { DayNavigator } from "../journey/day-navigator";
-import { DayTimeline } from "../journey/day-timeline";
-import { MapPanel } from "../map/map-panel";
-import { DecisionFeed } from "../decision/decision-feed";
 import {
   ProposalsProvider,
-  SharedProposals,
+  useSharedProposals,
 } from "../decision/shared-proposals";
-import { DockWorkspace } from "./dock-workspace";
 import "./workspace.css";
-import { SharedPeople } from "../people/shared-people";
-import { SharedChat } from "../chat/shared-chat";
+import "../../workspace/workspace.css";
 import { GoogleMapProvider } from "@/lib/maps/google-map-provider";
 import { useRoutes } from "@/lib/maps/use-routes";
 import { useTripWeather } from "@/lib/maps/use-trip-weather";
-import { HistoryPanel } from "../history/history-panel";
+import { AdaptiveWorkspace } from "../../workspace/adaptive-workspace";
+import type { WidgetProps } from "../../workspace/widget-content";
 
 export function TripWorkspace({ trip }: { trip: Trip }) {
   const t = useTranslations("mvp");
@@ -67,54 +61,27 @@ export function TripWorkspace({ trip }: { trip: Trip }) {
   const url = (view: string) => `${base}/trips/${trip.id}?view=${view}`;
   return (
     <GoogleMapProvider enabled>
-      <main className="mvp-workspace travel-workspace">
-        <TripHeader trip={trip} />
+      <main
+        className="mvp-workspace travel-workspace"
+        data-selected={activity?.id ?? undefined}
+      >
+        <TripHeader trip={trip} selectedDay={day} />
         <ProposalsProvider tripId={trip.id}>
-        <DockWorkspace
-          active={active}
-          requested={requested}
-          onNavigate={(id) => router.push(url(id), { scroll: false })}
-          panels={{
-            plan: (
-              <>
-                <DayNavigator
-                  trip={trip}
-                  day={day}
-                  onChange={handleDayChange}
-                />
-                <p className="journey-timezone">{trip.timezone}</p>
-                <DayTimeline
-                  trip={trip}
-                  day={day}
-                  items={items}
-                  selected={activity?.id}
-                  onSelect={setSelected}
-                  hovered={hovered}
-                  onHover={setHovered}
-                  routes={routes.segments}
-                />
-              </>
-            ),
-            map: (
-              <MapPanel
-                items={items}
-                selected={activity}
-                onSelect={setSelected}
-                hovered={hovered}
-                onHover={setHovered}
-                routing={routes}
-                routes={routes.segments}
-                dayRisk={dayRisk}
-              />
-            ),
-            ai: <DecisionFeed trip={trip} selected={activity} />,
-            chat: <SharedChat trip={trip} />,
-            decisions: <SharedProposals trip={trip} />,
-            budget: <BudgetPanel trip={trip} />,
-            people: <SharedPeople trip={trip} />,
-            history: <HistoryPanel trip={trip} />,
-          }}
-        />
+          <WorkspaceDock
+            trip={trip}
+            active={active}
+            requested={requested}
+            day={day}
+            items={items}
+            activity={activity}
+            hovered={hovered}
+            dayRisk={dayRisk}
+            routes={routes}
+            onNavigate={(id) => router.push(url(id), { scroll: false })}
+            onDayChange={handleDayChange}
+            onSelect={setSelected}
+            onHover={setHovered}
+          />
         </ProposalsProvider>
         <nav
           className="mvp-view-nav dock-mobile-nav"
@@ -143,5 +110,60 @@ export function TripWorkspace({ trip }: { trip: Trip }) {
         </nav>
       </main>
     </GoogleMapProvider>
+  );
+}
+
+function WorkspaceDock({
+  trip,
+  active,
+  requested,
+  day,
+  items,
+  activity,
+  hovered,
+  dayRisk,
+  routes,
+  onNavigate,
+  onDayChange,
+  onSelect,
+  onHover,
+}: {
+  trip: Trip;
+  active: PanelId;
+  requested: string | null;
+  day: number;
+  items: Trip["activities"];
+  activity: Trip["activities"][number] | undefined;
+  hovered: string | null;
+  dayRisk: { date: string } | null;
+  routes: ReturnType<typeof useRoutes>;
+  onNavigate: (id: PanelId) => void;
+  onDayChange: (day: number) => void;
+  onSelect: (id: string) => void;
+  onHover: (id: string | null) => void;
+}) {
+  const { proposals } = useSharedProposals(trip.id);
+  const openCount = proposals.filter((p) => p.status === "open").length;
+  const widgetProps: WidgetProps = {
+    trip,
+    day,
+    items,
+    activity,
+    hovered,
+    routes,
+    routing: routes,
+    dayRisk: dayRisk as never,
+    onDayChange,
+    onSelect,
+    onHover,
+  };
+  return (
+    <AdaptiveWorkspace
+      {...widgetProps}
+      active={active}
+      requested={requested}
+      onNavigate={onNavigate}
+      badges={{ decisions: openCount || proposals.length }}
+    />
   );
 }

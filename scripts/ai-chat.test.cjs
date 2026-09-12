@@ -146,6 +146,34 @@ function check(name, fn) {
       config.summarizeKeyError(new Error("boom")),
       "boom",
     );
+    assert.equal(config.isRateLimitError({ status: 429 }), true);
+    assert.equal(
+      config.isRateLimitError(new Error("50 requests per day total")),
+      true,
+    );
+    assert.equal(config.isRateLimitError({ status: 401 }), false);
+    assert.equal(config.isPaymentError({ status: 402 }), true);
+    assert.equal(
+      config.isPaymentError(new Error("payment_required: insufficient")),
+      true,
+    );
+    assert.equal(config.isPaymentError({ status: 429 }), false);
+    assert.match(
+      fs.readFileSync(path.join(ROOT, "src/lib/ai/model.ts"), "utf8"),
+      /X-OpenRouter-Title/,
+    );
+    const routeSrc = fs.readFileSync(
+      path.join(ROOT, "src/app/api/ai/chat/route.ts"),
+      "utf8",
+    );
+    assert.match(routeSrc, /AI_QUOTA_EXHAUSTED/);
+    assert.match(routeSrc, /AI_CREDITS_EXHAUSTED/);
+    assert.match(routeSrc, /recursionLimit/);
+    const promptSrc = fs.readFileSync(
+      path.join(ROOT, "src/lib/ai/prompts.ts"),
+      "utf8",
+    );
+    assert.match(promptSrc, /already loaded/);
   });
   check("default model is Gemma free tier", () => {
     assert.equal(
@@ -424,6 +452,16 @@ function check(name, fn) {
     );
     assert.match(canvasSrc, /TilesWatchdog/);
     assert.match(canvasSrc, /tilesloaded/);
+    // The Maps API renders into an inner height:100% div: the canvas
+    // container must have a definite height, not min-height alone.
+    const workspaceCss = fs.readFileSync(
+      path.join(ROOT, "src/components/trip/workspace/workspace.css"),
+      "utf8",
+    );
+    assert.match(
+      workspaceCss,
+      /\.google-map-canvas\s*{[^}]*height:\s*\d+px/,
+    );
   });
 
   check("debug logs are gated and never carry secrets", () => {
@@ -501,8 +539,14 @@ function check(name, fn) {
   });
 
   console.log(`\nPASS scripts/ai-chat.test.cjs (${passed} checks)`);
+  fs.rmSync(tmp, { recursive: true, force: true });
 })().catch((error) => {
   console.error("FAIL scripts/ai-chat.test.cjs");
   console.error(error);
+  try {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  } catch {
+    /* leave residue for inspection */
+  }
   process.exit(1);
 });

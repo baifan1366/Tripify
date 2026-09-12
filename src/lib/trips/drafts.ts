@@ -57,12 +57,17 @@ export async function saveDraft(
  * Loads once per trip/kind (never clobbering fresh typing) and
  * debounces saves; clearing the input deletes the stored draft.
  */
+const memoryDrafts = new Map<string, string>();
+
 export function usePersistentDraft(
   tripId: string,
   kind: DraftKind,
 ): [string, (value: string) => void] {
-  const [value, setValue] = useState("");
-  const touched = useRef(false);
+  const key = `${tripId}:${kind}`;
+  // Synchronous memory cache: widget hide/show remounts within a session
+  // restore instantly instead of waiting for the debounced server roundtrip.
+  const [value, setValue] = useState(() => memoryDrafts.get(key) ?? "");
+  const touched = useRef(memoryDrafts.has(key));
   const loaded = useRef(false);
 
   // Scoped per mount: TripWorkspace remounts per trip, so no in-effect reset
@@ -91,10 +96,15 @@ export function usePersistentDraft(
     return () => clearTimeout(timer);
   }, [value, tripId, kind]);
 
-  const set = useCallback((next: string) => {
-    touched.current = true;
-    setValue(next);
-  }, []);
+  const set = useCallback(
+    (next: string) => {
+      touched.current = true;
+      if (next) memoryDrafts.set(key, next);
+      else memoryDrafts.delete(key);
+      setValue(next);
+    },
+    [key],
+  );
 
   return [value, set];
 }

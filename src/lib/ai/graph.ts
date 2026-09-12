@@ -109,7 +109,8 @@ export async function runTripifyTurn(
   let text = "";
   const events = graph.streamEvents(
     { messages: toBaseMessages(turns) },
-    { version: "v2", configurable: { thread_id } },
+    // Bounded tool loops: every extra round is another billed API call.
+    { version: "v2", configurable: { thread_id }, recursionLimit: 12 },
   );
   for await (const event of events) {
     if (event.event === "on_tool_start") {

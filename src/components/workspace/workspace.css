@@ -1,0 +1,675 @@
+/* Tripify adaptive bento workspace. Calm canvas, minimal chrome. */
+
+/* ---- react-grid-layout essentials (hand-scoped, no global import) ---- */
+.ws-grid {
+  position: relative;
+}
+.ws-grid .react-grid-item {
+  box-sizing: border-box;
+  transition:
+    transform 200ms ease,
+    width 200ms ease,
+    height 200ms ease,
+    opacity 200ms ease;
+}
+.ws-grid .react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 3;
+  opacity: 0.92;
+}
+.ws-grid .react-grid-item.resizing {
+  z-index: 2;
+  opacity: 0.94;
+}
+.ws-grid .react-grid-placeholder {
+  background: var(--primary);
+  opacity: 0.14;
+  border-radius: 14px;
+  z-index: 0;
+}
+.ws-grid .react-resizable-handle {
+  position: absolute;
+  z-index: 1;
+  opacity: 0;
+  touch-action: none;
+  box-sizing: border-box;
+}
+/* One handle per axis — never stacked on the same spot, or a single-axis
+   handle on top swallows the pointer and only width (or height) changes. */
+.ws-grid .react-resizable-handle-se {
+  bottom: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  cursor: nwse-resize;
+}
+.ws-grid .react-resizable-handle-s {
+  bottom: 0;
+  left: 14px;
+  right: 14px;
+  height: 14px;
+  cursor: ns-resize;
+}
+.ws-grid .react-resizable-handle-e {
+  right: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 14px;
+  cursor: ew-resize;
+}
+.ws-grid .react-grid-item:hover .react-resizable-handle,
+.ws-grid .react-grid-item:focus-within .react-resizable-handle {
+  opacity: 1;
+}
+.ws-grid .react-grid-item.resizing .react-resizable-handle {
+  opacity: 1;
+}
+.ws-grid .react-resizable-handle-se::after {
+  content: "";
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--muted-foreground);
+  border-bottom: 2px solid var(--muted-foreground);
+  border-bottom-right-radius: 3px;
+}
+.ws-grid .react-resizable-handle-s::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  width: 28px;
+  height: 4px;
+  margin-left: -14px;
+  border-radius: 2px;
+  background: var(--muted-foreground);
+}
+.ws-grid .react-resizable-handle-e::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  width: 4px;
+  height: 28px;
+  margin-top: -14px;
+  border-radius: 2px;
+  background: var(--muted-foreground);
+}
+
+/* ---- canvas + toolbar ---- */
+.adaptive-workspace {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ws-toolbar {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 16px;
+  flex-wrap: wrap;
+}
+.ws-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.ws-control {
+  min-height: 32px;
+  min-width: 32px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius);
+  padding: 4px 8px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.ws-control:hover {
+  background: var(--surface-hover);
+  color: var(--primary);
+}
+.ws-chip {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+/* ---- widget frame ---- */
+.ws-grid .react-grid-item {
+  overflow: hidden;
+}
+.ws-widget {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  min-height: 0;
+}
+/* Neutralize the previous fixed-dock rules: inside the grid the item box,
+   not the panel, owns geometry. Business descendant styles still apply. */
+.ws-grid .ws-widget.dock-panel {
+  flex: none;
+  border-right: 1px solid var(--border);
+}
+.ws-grid .ws-widget.dock-panel-content,
+.ws-grid .dock-panel-content {
+  overflow: auto;
+}
+@media (max-width: 1199px) {
+  .ws-grid .ws-widget.dock-panel[data-state] {
+    display: flex !important;
+  }
+  .ws-grid .dock-panel-content {
+    overflow: auto;
+  }
+  /* Mobile stack is not the old dock: never force-hide its widgets. */
+  .ws-stack .ws-widget.dock-panel[data-state] {
+    display: flex !important;
+  }
+  .ws-stack .dock-panel-content {
+    overflow: visible;
+  }
+}
+.ws-widget:hover {
+  border-color: var(--input);
+}
+.ws-widget-heading {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  padding: 2px 6px 2px 4px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.ws-drag-handle {
+  cursor: grab;
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted-foreground);
+}
+.ws-drag-handle:active {
+  cursor: grabbing;
+}
+/* Use mode hides the grip affordance (pointer drag is locked); the title
+   keeps its class so edit mode needs no DOM change, and the ⋯ menu always
+   offers keyboard move/resize. */
+.ws-canvas:not([data-editing="true"]) span.ws-drag-handle,
+.ws-stack:not([data-editing="true"]) span.ws-drag-handle {
+  display: none;
+}
+.ws-canvas[data-editing="true"] .ws-widget:hover {
+  border-style: dashed;
+  border-color: var(--primary);
+}
+.ws-widget-title {
+  font-size: 14px;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+}
+.ws-widget-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+}
+.ws-widget:hover .ws-widget-actions,
+.ws-widget:focus-within .ws-widget-actions,
+.ws-widget[data-focused="true"] .ws-widget-actions {
+  opacity: 1;
+}
+@media (hover: none) {
+  .ws-widget-actions,
+  .ws-grid .react-resizable-handle {
+    opacity: 1;
+  }
+}
+.ws-icon-button {
+  min-width: 32px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--muted-foreground);
+}
+.ws-icon-button:hover {
+  background: var(--surface-hover);
+  color: var(--primary);
+}
+.ws-menu-anchor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+/* Presence: who else is looking at this widget right now. */
+.ws-presence {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+.ws-presence-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-grid;
+  place-items: center;
+  border: 2px solid var(--card);
+  margin-left: -6px;
+}
+.ws-presence-avatar:first-child {
+  margin-left: 0;
+}
+.ws-presence-more {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin-left: 2px;
+}
+/* AI starter chips: tap-to-send onboarding for an empty thread. */
+.ai-suggest-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 2px 10px;
+}
+.ai-suggest-row button {
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--primary);
+  background: var(--card);
+}
+.ai-suggest-row button:hover {
+  background: var(--accent);
+  border-color: var(--primary);
+}
+/* Inline proposal diffs in the focused AI widget. */
+.decision-diff {
+  margin: 8px 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+.decision-diff li {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--muted);
+  overflow-wrap: anywhere;
+}
+/* Empty states share one calm pattern inside widgets (visual rhythm only;
+   copy lives with each feature). */
+.ws-widget .mvp-inline-empty {
+  text-align: center;
+  padding: 28px 16px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.ws-widget .ai-chat-log > .decision-quiet:only-child,
+.ws-widget .mvp-chat-messages > .decision-quiet:only-child {
+  text-align: center;
+  padding: 20px 12px;
+}
+/* Density swaps fade instead of popping. display:none→block restarts the
+   animation, so every tier change gets exactly one 120ms crossfade. */
+.ws-full-content,
+.ws-compact-only {
+  animation: ws-fade 120ms ease-out;
+}
+@keyframes ws-fade {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* Numbers stay aligned when values update (budget, times, counts). */
+.budget-calm-amounts strong,
+.budget-calm-amounts span,
+.budget-day-row strong,
+.mvp-activity-time,
+.mvp-activity-meta,
+.journey-neighbour,
+.history-entry time,
+.mvp-chat-bubble time {
+  font-variant-numeric: tabular-nums;
+}
+.ws-widget-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  font-size: 14px;
+  line-height: 1.55;
+  scrollbar-gutter: stable;
+}
+.ws-compact-only {
+  display: none;
+}
+.ws-widget[data-density="compact"] .ws-compact-only {
+  display: block;
+}
+.ws-compact-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px 4px;
+}
+.ws-compact-row strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.ws-compact-row button {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+.ws-compact-next {
+  display: block;
+  width: calc(100% - 20px);
+  margin: 0 10px 8px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--primary);
+  padding: 6px 8px;
+  border-radius: 8px;
+}
+.ws-compact-next:hover,
+.ws-compact-row button:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+.ws-map-compact,
+.ws-decisions-compact {
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+/* ---- density: widgets show less, not smaller text ----
+   Only widgets with a dedicated compact summary hide their full content;
+   the rest trim internals via the rules below so compact never goes blank. */
+.ws-widget[data-widget="plan"][data-density="compact"] .ws-full-content,
+.ws-widget[data-widget="decisions"][data-density="compact"] .ws-full-content {
+  display: none;
+}
+/* History keeps its own summary-first design at every density: an explicit
+   "view all" always reveals the timeline (scrollable), never hidden by CSS. */
+/* Journey: medium is a read-only timeline (no segments, no edit actions);
+   expanded restores route segments, details and edit controls. */
+/* Journey day controls declutter by density: compact keeps only the summary
+   row's arrows + current day; medium adds neighbours; the jump dropdown is
+   expanded-only. */
+.ws-widget[data-widget="plan"][data-density="medium"] .journey-jump,
+.ws-widget[data-widget="plan"][data-density="medium"] .journey-rail-legacy {
+  display: none;
+}
+.ws-widget[data-widget="plan"][data-density="medium"] .journey-segment,
+.ws-widget[data-widget="plan"][data-density="medium"] .journey-edit-actions {
+  display: none;
+}
+/* Map: compact handled above; medium hides transit/risk tooling. */
+.ws-widget[data-widget="map"][data-density="medium"] .travel-route-tools,
+.ws-widget[data-widget="map"][data-density="compact"] .travel-map-controls,
+.ws-widget[data-widget="map"][data-density="compact"] .travel-route-tools {
+  display: none;
+}
+/* AI: compact keeps the latest turn + composer only; medium adds the recent
+   conversation while proposals stay expanded-only. NOTE: the :not(.ai-chat)
+   guard is load-bearing — without it the whole chat (including the input)
+   would be hidden at compact/medium. */
+.ws-widget[data-widget="ai"][data-density="compact"]
+  .ai-chat-log
+  > :not(:last-child),
+.ws-widget[data-widget="chat"][data-density="compact"] .mvp-chat-messages {
+  display: none;
+}
+.ws-widget[data-widget="ai"][data-density="compact"] .ai-live > section[aria-label]:not(.ai-chat),
+.ws-widget[data-widget="ai"][data-density="medium"] .ai-live > section[aria-label]:not(.ai-chat) {
+  display: none;
+}
+/* AI composer is pinned to the visible bottom at every density: it is the
+   primary action of the widget and must never scroll out of reach. */
+.ws-widget[data-widget="ai"] .ai-chat {
+  display: flex;
+  flex-direction: column;
+}
+.ws-widget[data-widget="ai"] .mvp-composer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  background: var(--card);
+}
+/* Budget: compact is used/total/% + bar; medium adds forecast + remaining;
+   day breakdown and AI actions are expanded-only. */
+.ws-widget[data-widget="budget"][data-density="compact"] .budget-day-list,
+.ws-widget[data-widget="budget"][data-density="compact"] .mvp-ai-reduce,
+.ws-widget[data-widget="budget"][data-density="compact"] .budget-calm .mvp-hint,
+.ws-widget[data-widget="budget"][data-density="compact"] .budget-calm-sub,
+.ws-widget[data-widget="budget"][data-density="medium"] .budget-day-list,
+.ws-widget[data-widget="budget"][data-density="medium"] .mvp-ai-reduce {
+  display: none;
+}
+/* People: rail → +detail → +invite/preferences. */
+.ws-widget[data-widget="people"][data-density="compact"]
+  .shared-panel
+  > :not(.people-rail) {
+  display: none;
+}
+.ws-widget[data-widget="people"][data-density="medium"] .shared-invite,
+.ws-widget[data-widget="people"][data-density="medium"]
+  .mvp-preferences-form {
+  display: none;
+}
+/* Decisions: medium hides diffs, vote actions and the aside. */
+.ws-widget[data-widget="decisions"][data-density="medium"] .mvp-diff,
+.ws-widget[data-widget="decisions"][data-density="medium"] .mvp-voters,
+.ws-widget[data-widget="decisions"][data-density="medium"]
+  .mvp-proposal
+  .mvp-form-actions,
+.ws-widget[data-widget="decisions"][data-density="medium"]
+  .mvp-proposal
+  textarea,
+.ws-widget[data-widget="decisions"][data-density="medium"]
+  .mvp-decision-aside,
+.ws-widget[data-widget="decisions"][data-density="medium"]
+  .mvp-decision-layout
+  > section
+  > .mvp-form-actions,
+.ws-widget[data-widget="decisions"][data-density="medium"]
+  form.mvp-proposal {
+  display: none;
+}
+
+/* ---- focus mode: body-level overlay, layout untouched ----
+   The focused frame is portaled to document.body (RGL items are CSS
+   transformed, which would trap viewport-fixed positioning). Grid geometry,
+   React state and subscriptions are preserved; closing restores everything. */
+.ws-canvas[data-focus] .react-grid-item {
+  opacity: 0.35;
+}
+.ws-focus-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(7 24 44 / 45%);
+}
+.ws-focus-scrim .ws-widget {
+  width: min(1100px, 100%);
+  height: min(860px, calc(100vh - 48px));
+}
+/* The scrim lives under document.body: neutralize the old ≤1199px dock
+   hiding rule here as well (no .ws-grid/.ws-stack ancestor applies). */
+.ws-focus-scrim .ws-widget.dock-panel[data-state] {
+  display: flex !important;
+}
+.ws-keepalive {
+  display: none;
+}
+.ws-focus-close {
+  position: absolute;
+  top: 8px;
+  right: 56px;
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--primary);
+  font-size: 13px;
+  display: none;
+}
+.ws-widget[data-focused="true"] .ws-focus-close {
+  display: block;
+}
+
+/* ---- map canvas fills the widget ----
+   The canvas used to be a fixed 420px: growing the widget taller only added
+   dead space below the map. This flex chain (all heights definite, from the
+   RGL-sized section down) lets the canvas grow AND shrink with the widget
+   while keeping a usable floor on short/mobile layouts. */
+.ws-widget[data-widget="map"] .ws-widget-body {
+  display: flex;
+  flex-direction: column;
+}
+.ws-widget[data-widget="map"] .ws-full-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.ws-widget[data-widget="map"] .travel-map {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.ws-widget[data-widget="map"] .google-map-canvas {
+  flex: 1 1 auto;
+  min-height: 300px;
+  height: auto;
+}
+
+/* ---- mobile stack + skeleton ---- */
+.ws-stack {
+  display: grid;
+  gap: 12px;
+  padding: 12px 12px 24px;
+}
+.ws-stack-item {
+  min-width: 0;
+  scroll-margin-top: 12px;
+}
+.ws-stack .ws-widget {
+  min-height: 120px;
+  max-height: none;
+}
+.ws-skeleton {
+  display: grid;
+  gap: 12px;
+  padding: 12px 16px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.ws-skeleton-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.ws-empty {
+  padding: 24px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-grid .react-grid-item {
+    transition: none;
+  }
+  .ws-full-content,
+  .ws-compact-only {
+    animation: none;
+  }
+}
+/* ---- print: a clean trip sheet, what-you-see minus chrome ----
+   Density tiers print as-is (the user's chosen information density);
+   only interactive-only elements are stripped. */
+@media print {
+  .app-rail,
+  .ws-toolbar,
+  .ws-widget-actions,
+  .react-resizable-handle,
+  .ws-focus-scrim,
+  .ws-keepalive,
+  .ws-menu-anchor,
+  .dock-mobile-nav,
+  .journey-edit-actions,
+  .mvp-composer,
+  .mvp-activity-form,
+  .ws-skeleton,
+  .mvp-share-trigger,
+  .ws-focus-close {
+    display: none !important;
+  }
+  .ws-grid {
+    height: auto !important;
+  }
+  .ws-grid .react-grid-item {
+    position: static !important;
+    transform: none !important;
+    width: 100% !important;
+    height: auto !important;
+    margin-bottom: 12px;
+  }
+  .ws-widget {
+    height: auto !important;
+    break-inside: avoid;
+  }
+  .ws-widget-body {
+    overflow: visible !important;
+  }
+  @page {
+    margin: 12mm;
+  }
+}
+@media (forced-colors: active) {
+  .ws-grid .react-grid-placeholder {
+    background: Highlight;
+    opacity: 0.4;
+  }
+}

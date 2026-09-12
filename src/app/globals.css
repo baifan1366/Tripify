@@ -39,6 +39,42 @@
   --radius: 10px;
 }
 
+/* Workspace dark theme (toggled by ThemeToggle, defaults to the OS
+   preference). Wins over .trip-app-theme by specificity; brand blues and
+   map tiles intentionally stay light. */
+.dark .trip-app-theme {
+  color-scheme: dark;
+  --background: #0a1526;
+  --foreground: #e8f1fa;
+  --card: #101f33;
+  --card-foreground: #e8f1fa;
+  --primary: #4b93f8;
+  --primary-foreground: #06121f;
+  --primary-hover: #6aa5fa;
+  --primary-active: #2e7cf6;
+  --muted-foreground: #8ba3bd;
+  --border: #1e3a55;
+  --input: #2a4a6b;
+  --ring: #4b93f8;
+  --accent: #142942;
+  --surface-hover: #162942;
+  --disabled: #1a2c44;
+  --disabled-foreground: #647f9c;
+  --destructive: #f0666e;
+  --status-danger-bg: #3a1620;
+  --status-success-fg: #4cc38a;
+  --status-success-bg: #0f2e23;
+  --status-warning-fg: #f0b429;
+  --muted: #142639;
+  --map-land: #12253c;
+  --map-water: #0e2a44;
+  --map-park: #12352b;
+  --scrollbar-thumb: #2a4a6b;
+  --scrollbar-track: #0a1526;
+  --scrollbar-hover: #3a5f86;
+  --scrollbar-active: #8ba3bd;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

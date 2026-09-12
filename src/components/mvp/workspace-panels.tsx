@@ -2,7 +2,7 @@
 
 import { memo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Sparkles, Wallet } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import {
   estimatedTotal,
@@ -18,8 +18,12 @@ import { AppButton } from "./primitives";
 /** Budget forecast computed deterministically from stored activities. */
 export const BudgetPanel = memo(function BudgetPanel({
   trip,
+  selectedId,
+  day,
 }: {
   trip: Trip;
+  selectedId?: string;
+  day?: number;
 }) {
   const t = useTranslations("mvp");
   const shared = useTranslations("shared");
@@ -35,67 +39,85 @@ export const BudgetPanel = memo(function BudgetPanel({
       currency: trip.currency,
       maximumFractionDigits: 2,
     }).format(n);
+  const percent =
+    trip.budget > 0 ? Math.min(100, (planned / trip.budget) * 100) : planned > 0 ? 100 : 0;
+  const over = planned > trip.budget;
+  const byDay = new Map<number, { total: number; count: number }>();
+  for (const a of trip.activities) {
+    const entry = byDay.get(a.day) ?? { total: 0, count: 0 };
+    entry.total += a.cost;
+    entry.count += 1;
+    byDay.set(a.day, entry);
+  }
+  const days = [...byDay.entries()].sort((a, b) => a[0] - b[0]);
   const overrun = Math.max(0, forecast - trip.budget);
   return (
-    <section className="mvp-budget-page">
-      <p className="mvp-eyebrow">{t("budget")}</p>
-      <h2>{t("budgetIntro")}</h2>
-      <div className="mvp-budget-grid">
-        <article className="mvp-card mvp-budget-overview">
-          <Wallet size={26} />
-          <p>{t("currentEstimate")}</p>
+    <section className="budget-calm" data-over={over} aria-label={t("budget")}>
+      <div className="budget-calm-top">
+        <small>{t("budget")}</small>
+        <div className="budget-calm-amounts">
           <strong>{money(planned)}</strong>
-          <span> / {money(trip.budget)}</span>
-          <div
-            className="mvp-budget-track"
-            role="meter"
-            aria-label={t("budget")}
-            aria-valuemin={0}
-            aria-valuemax={trip.budget || 1}
-            aria-valuenow={Math.min(planned, trip.budget || 1)}
-            aria-valuetext={`${money(planned)} / ${money(trip.budget)}`}
-          >
-            <span
-              style={{
-                width: `${Math.min(100, trip.budget > 0 ? (planned / trip.budget) * 100 : planned > 0 ? 100 : 0)}%`,
-              }}
-            />
-          </div>
-          <div className="mvp-budget-row">
-            <span>{t(planned > trip.budget ? "overBudget" : "remaining")}</span>
-            <strong>{money(Math.abs(trip.budget - planned))}</strong>
-          </div>
-          <p className="mvp-hint">{t("estimateNote")}</p>
-        </article>
-        <article className="mvp-card mvp-forecast">
-          <span className="mvp-eyebrow">✦ {t("forecast")}</span>
-          <strong>{money(forecast)}</strong>
-          <p>
-            {`${t("forecastRemaining")}: ${money(Math.max(0, trip.budget - forecast))}`}
-          </p>
-          <span className="mvp-tag">{t("forecastTag")}</span>
-        </article>
+          <span>/ {money(trip.budget)}</span>
+          <span aria-hidden="true">· {Math.round(percent)}%</span>
+        </div>
+        <div
+          className="budget-calm-track"
+          role="meter"
+          aria-label={t("budget")}
+          aria-valuemin={0}
+          aria-valuemax={trip.budget || 1}
+          aria-valuenow={Math.min(planned, trip.budget || 1)}
+          aria-valuetext={`${money(planned)} / ${money(trip.budget)}`}
+        >
+          <i style={{ width: `${percent}%` }} />
+        </div>
+        <div className="budget-calm-sub">
+          <span>
+            {t("forecast")}: {money(forecast)}
+          </span>
+          <span>
+            {t(over ? "overBudget" : "remaining")}:{" "}
+            {money(Math.abs(trip.budget - planned))}
+          </span>
+        </div>
+        <p className="mvp-hint">{t("estimateNote")}</p>
       </div>
-      <section className="mvp-card mvp-cost-list">
-        <h3>{t("cost")}</h3>
-        {trip.activities.length ? (
-          trip.activities.map((activity) => (
-            <div className="mvp-cost-row" key={activity.id}>
-              <span>
-                <small>{t("day", { day: activity.day })}</small>
-                {activity.title}
-              </span>
-              <strong>{money(activity.cost)}</strong>
+      <div className="budget-day-list">
+        {days.length ? (
+          days.map(([d, summary]) => (
+            <div key={d}>
+              <div
+                className="budget-day-row"
+                data-active={typeof day === "number" && day === d}
+              >
+                <span>
+                  <small>{t("day", { day: d })}</small>
+                  {summary.count} · {money(summary.total)}
+                </span>
+                <strong>{money(summary.total)}</strong>
+              </div>
+              {trip.activities
+                .filter((a) => a.day === d)
+                .map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="budget-day-row"
+                    data-active={selectedId === activity.id}
+                  >
+                    <span>
+                      <small>{activity.time}</small>
+                      {activity.title}
+                    </span>
+                    <strong>{money(activity.cost)}</strong>
+                  </div>
+                ))}
             </div>
           ))
         ) : (
           <p className="mvp-muted">{t("noActivitiesBody")}</p>
         )}
-      </section>
-      <section className="mvp-card mvp-ai-reduce" aria-label={t("aiReduce")}>
-        <span className="mvp-eyebrow">✦ Tripify AI</span>
-        <h3>{t("aiReduce")}</h3>
-        <p className="mvp-muted">{t("aiReduceHint")}</p>
+      </div>
+      <section className="mvp-ai-reduce" aria-label={t("aiReduce")}>
         {ai.status === "idle" && (
           <AppButton
             onClick={() =>

@@ -87,7 +87,8 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
   fs.mkdirSync(out, { recursive: true });
   try {
     await page.goto(url + "/?view=chat");
-    const composer = page.locator(".mvp-composer textarea");
+    // Scope to the chat widget: the AI widget has its own composer.
+    const composer = page.locator("#dock-chat .mvp-composer textarea");
     await composer.fill("Draft survives");
     await page
       .getByRole("button", { name: "Chat options", exact: true })
@@ -98,33 +99,81 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
       .getByRole("button", { name: "Chat", exact: true })
       .click();
     assert.equal(await composer.inputValue(), "Draft survives");
-    const splitter = page.getByRole("separator", {
-      name: "Resize Chat",
-      exact: true,
-    });
-    const initialWidth = Number(await splitter.getAttribute("aria-valuenow"));
-    await splitter.focus();
-    await page.keyboard.press("ArrowRight");
-    assert.equal(
-      Number(await splitter.getAttribute("aria-valuenow")),
-      initialWidth + 20,
-    );
+    const chatWidget = page.locator("#dock-chat");
+    const initialW = Number(await chatWidget.getAttribute("data-w"));
+    await page
+      .getByRole("button", { name: "Chat options", exact: true })
+      .click();
+    await page.getByRole("button", { name: "Make wider", exact: true }).click();
+    assert.equal(Number(await chatWidget.getAttribute("data-w")), initialW + 1);
     await page
       .getByRole("button", { name: "Chat options", exact: true })
       .click();
     await page.getByRole("button", { name: "Move left", exact: true }).click();
     await page.keyboard.press("Escape");
     assert.equal(await composer.inputValue(), "Draft survives");
+    // Layout presets only rearrange widgets; reset restores the default.
+    await page.getByRole("button", { name: "Layouts", exact: true }).click();
+    await page.getByRole("button", { name: "Planning", exact: true }).click();
+    assert.equal(await page.locator("#dock-plan").getAttribute("data-w"), "5");
+    assert.equal(await composer.inputValue(), "Draft survives");
+    await page.getByRole("button", { name: "Reset layout", exact: true }).click();
+    assert.equal(await page.locator("#dock-plan").getAttribute("data-w"), "6");
+    // Reset hides Chat by design; restore it from the tray for the steps below.
+    await page.locator(".dock-minimized").getByRole("button", { name: "Chat", exact: true }).click();
+    // Header Share mints an invite code without leaving the workspace.
+    await page.getByRole("button", { name: "Share", exact: true }).click();
+    await page.locator(".mvp-share-panel").getByRole("button", { name: "Create invite code", exact: true }).click();
+    assert.equal(
+      (await page.locator(".mvp-share-panel").getByLabel("Invite code", { exact: true }).inputValue()).length,
+      64,
+    );
+    await page.keyboard.press("Escape");
+    // Edit mode gates pointer-drag affordances; the ⋯ menu always works.
+    await page.getByRole("button", { name: "Edit layout", exact: true }).click();
+    assert.equal(await page.locator(".ws-canvas").getAttribute("data-editing"), "true");
+    await page.getByRole("button", { name: "Done", exact: true }).click();
+    assert.equal(await page.locator(".ws-canvas").getAttribute("data-editing"), "false");
+    // Undo restores a hidden widget.
+    await page.getByRole("button", { name: "People options", exact: true }).click();
+    await page.getByRole("button", { name: "Minimize", exact: true }).click();
+    await page.locator(".dock-minimized").getByRole("button", { name: "People", exact: true }).waitFor();
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
+    assert.equal(await page.locator(".dock-minimized").getByRole("button", { name: "People", exact: true }).count(), 0);
+    // AI starter chips render before the first turn (5-day fixture trip).
+    assert.equal(await page.locator("#dock-ai .ai-suggest-row button").count(), 2);
+    // Theme toggle flips the dark class (globals.css ships the
+    // `.dark .trip-app-theme` overrides; the fixture bundle only carries
+    // component CSS, so computed values are asserted from the build).
+    await page.getByRole("button", { name: "Dark mode", exact: true }).click();
+    assert.equal(await page.evaluate(() => document.documentElement.classList.contains("dark")), true);
+    assert.equal(await page.evaluate(() => localStorage.getItem("tripify-theme")), "dark");
+    await page.getByRole("button", { name: "Light mode", exact: true }).click();
+    assert.equal(await page.evaluate(() => document.documentElement.classList.contains("dark")), false);
+    assert.equal(await page.getByRole("button", { name: "Print / PDF", exact: true }).count(), 1);
+    // Print stylesheet linearizes the grid and strips chrome.
+    await page.emulateMedia({ media: "print" });
+    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector(".ws-toolbar")).display), "none");
+    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector(".react-grid-item")).position), "static");
+    await page.emulateMedia({ media: "screen" });
+    // No realtime peers in the fixture: presence degrades to nothing.
+    assert.equal(await page.locator(".ws-presence").count(), 0);
+    // Layout persistence is debounced and stores geometry only.
+    await page.waitForFunction(() =>
+      (localStorage.getItem("tripify-workspace-grid-v1") || "").includes(
+        '"chat"',
+      ),
+    );
     assert.doesNotMatch(
-      await page.evaluate(() =>
-        localStorage.getItem("tripify.workspace-layout.v1"),
+      await page.evaluate(
+        () => localStorage.getItem("tripify-workspace-grid-v1") || "",
       ),
       /Draft survives/,
     );
     await page.evaluate(() => {
       window.testDatabase.failSend = true;
     });
-    await page.locator(".mvp-composer button").click();
+    await page.locator("#dock-chat .mvp-composer button").click();
     await page.getByText("Not sent. Retry uses the same message ID.").waitFor();
     await page.evaluate(() => {
       window.testDatabase.failSend = false;
@@ -147,15 +196,17 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
     await page.getByText("Incoming fixture message", { exact: true }).waitFor();
     await composer.fill("中文输入");
     await composer.dispatchEvent("compositionstart");
-    await page.locator(".mvp-composer button").click();
+    await page.locator("#dock-chat .mvp-composer button").click();
     assert.equal(await composer.inputValue(), "中文输入");
     await composer.dispatchEvent("compositionend");
     for (const width of [1440, 1100, 390, 320])
       for (const locale of ["en", "zh", "ms"]) {
         await page.setViewportSize({ width, height: 900 });
         await page.goto(`${url}/?locale=${locale}&view=history`);
+        // History shows a compact summary first; expand to full timeline.
+        await page.locator(".history-summary button").click();
         await page.locator(".history-entry").waitFor();
-        await page.locator(".history-entry summary").click();
+        await page.locator(".history-entry summary").first().click();
         assert.ok(
           (await page.locator(".history-entry dl").innerText()).includes(
             "5,000",
@@ -177,6 +228,13 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
         .length,
       64,
     );
+    // People detail (Remove) lives in medium+ density: widen the widget.
+    await page.getByRole("button", { name: "People options", exact: true }).click();
+    await page.getByRole("button", { name: "Make wider", exact: true }).click();
+    await page.getByRole("button", { name: "People options", exact: true }).click();
+    await page.getByRole("button", { name: "Make wider", exact: true }).click();
+    // People rail: select Alice before removing.
+    await page.getByRole("button", { name: /Alice/ }).click();
     await page.getByRole("button", { name: "Remove", exact: true }).click();
     await page
       .getByText("Remove Alice from this trip?", { exact: true })
@@ -186,6 +244,10 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
       window.testDatabase.removed.includes("other"),
     );
     await page.goto(url + "/?view=plan");
+    // Journey edit controls live in the expanded density: focus the widget.
+    await page
+      .getByRole("button", { name: "Expand Journey", exact: true })
+      .click();
     await page.getByRole("button", { name: "Edit", exact: true }).click();
     await page.locator('[name="time"]').fill("10:30");
     await page.evaluate(() => {
@@ -219,6 +281,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
       .getByRole("button", { name: "Save changes", exact: true })
       .click();
     await page.waitForFunction(() => window.testDatabase.version === 3);
+    await page.keyboard.press("Escape"); // close Journey focus overlay
     await page.goto(url + "/?view=map");
     await page
       .getByText("Google Map unavailable. Your itinerary remains usable below.")
@@ -247,7 +310,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
     );
     assert.deepEqual(errors, []);
     console.log(
-      "PASS isolated UI: invite/remove, chat retry identity + incoming event + IME + minimized draft, stale edit recovery, history details, map missing-key/coordinate fallback, 3 locales × 4 widths. Transport fixtures only; no live Supabase or Google.",
+      "PASS isolated UI: free-form grid (hide/restore, keyboard move/resize, preset switching, reset, focus mode, adaptive density), invite/remove, chat retry identity + incoming event + IME + minimized draft, stale edit recovery, history details, map missing-key/coordinate fallback, 3 locales × 4 widths. Transport fixtures only; no live Supabase or Google.",
     );
   } catch (error) {
     await page.screenshot({

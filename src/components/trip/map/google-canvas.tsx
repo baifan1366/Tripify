@@ -35,12 +35,14 @@ export function GoogleCanvas({
 }) {
   const t = useTranslations("shared");
   const status = useApiLoadingStatus();
-  const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
+  // Env values pasted with stray whitespace become invalid Map IDs (gray map).
+  const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID?.trim() || "";
   const points = items.filter((item) => coordinates(item));
   useEffect(() => {
     debugLog("maps", "canvas status", {
       status,
       hasMapId: !!mapId,
+      mapIdLen: mapId.length,
       items: items.length,
       points: points.length,
     });
@@ -131,6 +133,7 @@ export function GoogleCanvas({
             </AdvancedMarker>
           ))}
           <Camera items={items} selected={selected} fit={fit} />
+          <ResizeNotifier />
           {routes.map((route) => (
             <RouteLine key={`${route.from}:${route.to}`} route={route} />
           ))}
@@ -231,6 +234,25 @@ function TilesWatchdog({ onStuck }: { onStuck: () => void }) {
       listener.remove();
     };
   }, [map, onStuck]);
+  return null;
+}
+function ResizeNotifier() {
+  const map = useMap();
+  // Widget resize changes the container div behind the map's back (drag the
+  // s/se handle and tiles would otherwise keep the old viewport). Nudging
+  // the resize event keeps tiles, markers and camera in sync with the box.
+  useEffect(() => {
+    if (!map || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => {
+      try {
+        google.maps.event.trigger(map, "resize");
+      } catch {
+        /* map torn down mid-resize; safe to ignore */
+      }
+    });
+    ro.observe(map.getDiv());
+    return () => ro.disconnect();
+  }, [map]);
   return null;
 }
 function RouteLine({ route }: { route: RouteSegment }) {

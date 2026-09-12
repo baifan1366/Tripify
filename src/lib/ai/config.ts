@@ -118,6 +118,39 @@ export function isKeyRotationError(error: unknown): boolean {
   );
 }
 
+/**
+ * True for rate/quota exhaustion (a subset of rotation errors). Free-model
+ * 429s are account-wide per OpenRouter docs, so rotating keys cannot help.
+ */
+export function isRateLimitError(error: unknown): boolean {
+  if (errorStatus(error) === 429) return true;
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "object" && error !== null && "message" in error
+        ? String((error as { message: unknown }).message)
+        : String(error ?? "");
+  return /rate.?limit|too many requests|quota|requests per day/i.test(message);
+}
+
+/**
+ * True for empty-wallet failures (OpenRouter 402 `payment_required`).
+ * Per docs this needs a top-up even for free models, so rotating keys
+ * can never help: it must stop the loop immediately.
+ */
+export function isPaymentError(error: unknown): boolean {
+  if (errorStatus(error) === 402) return true;
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "object" && error !== null && "message" in error
+        ? String((error as { message: unknown }).message)
+        : String(error ?? "");
+  return /payment_?required|billing_error|insufficient (credits|balance|funds)|out of credits/i.test(
+    message,
+  );
+}
+
 /** Short, key-safe summary for rotation logs (status code, never key material). */
 export function summarizeKeyError(error: unknown): string {
   const status = errorStatus(error);

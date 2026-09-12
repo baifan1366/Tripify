@@ -24,7 +24,7 @@ export function createTravelModel(
       baseURL: "https://openrouter.ai/api/v1",
       defaultHeaders: {
         "HTTP-Referer": config.appUrl,
-        "X-Title": "Tripify",
+        "X-OpenRouter-Title": "Tripify",
       },
     },
   });

@@ -32,9 +32,12 @@ function parseSseLine(line: string): StreamEvent | null {
 export function AiChat({
   tripId,
   selectedDay,
+  suggestions,
 }: {
   tripId: string;
   selectedDay?: number;
+  /** Tap-to-send starter prompts, shown only before the first turn. */
+  suggestions?: string[];
 }) {
   const t = useTranslations("dock");
   const locale = useLocale();
@@ -136,7 +139,11 @@ export function AiChat({
             setError(
               event.code === "AI_NOT_CONFIGURED"
                 ? t("aiNotConfigured")
-                : event.message || t("aiFailed"),
+                : event.code === "AI_QUOTA_EXHAUSTED"
+                  ? t("aiQuotaExhausted")
+                  : event.code === "AI_CREDITS_EXHAUSTED"
+                    ? t("aiCreditsExhausted")
+                    : event.message || t("aiFailed"),
             );
           }
         }
@@ -168,16 +175,20 @@ export function AiChat({
     }
   }
 
-  function send(event: FormEvent) {
-    event.preventDefault();
-    const content = input.trim();
-    if (!content || streaming) return;
-    const next: Turn[] = [...turns, { role: "user", content }];
+  function sendText(content: string) {
+    const text = content.trim();
+    if (!text || streaming) return;
+    const next: Turn[] = [...turns, { role: "user", content: text }];
     setTurns(next);
     setInput("");
     stickRef.current = true;
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
     void ask(next);
+  }
+
+  function send(event: FormEvent) {
+    event.preventDefault();
+    sendText(input);
   }
 
   function retry() {
@@ -191,14 +202,6 @@ export function AiChat({
 
   return (
     <section className="ai-chat" aria-label={t("ai")}>
-      <div className="decision-event decision-ai-intro">
-        <Sparkles size={18} aria-hidden="true" />
-        <div>
-          <h3>✦ {t("ai")}</h3>
-          <p>{t("aiIntro")}</p>
-        </div>
-      </div>
-
       <div
         ref={logRef}
         className="ai-chat-log"
@@ -262,6 +265,16 @@ export function AiChat({
           <AppButton variant="outline" onClick={retry}>
             {t("aiRetry")}
           </AppButton>
+        </div>
+      )}
+
+      {!turns.length && !streaming && (suggestions?.length ?? 0) > 0 && (
+        <div className="ai-suggest-row" role="group" aria-label={t("ai")}>
+          {suggestions!.slice(0, 3).map((s) => (
+            <button key={s} type="button" onClick={() => sendText(s)}>
+              {s}
+            </button>
+          ))}
         </div>
       )}
 

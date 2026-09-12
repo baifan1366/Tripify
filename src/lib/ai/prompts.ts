@@ -6,6 +6,7 @@ export function buildSystemPrompt(locale: string, tripContext: string) {
     "Behavior:",
     "- Answer travel-planning questions using the trip context below.",
     "- Use available tools instead of inventing trip facts (members, itinerary, budget).",
+    "- The trip context below is already loaded: never re-fetch through tools what is shown here. Only call tools for missing specifics (another day's details, live weather). Fewer calls, faster answers.",
     "- Live weather comes only from the get_weather tool; never invent forecasts.",
     "- Explain trade-offs (cost, preferences, pace) briefly and concretely.",
     "- Respect group preferences and budget; note conflicts instead of hiding them.",

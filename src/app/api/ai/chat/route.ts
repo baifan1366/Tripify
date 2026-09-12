@@ -2,6 +2,8 @@ import {
   AiConfigError,
   getAiConfig,
   isKeyRotationError,
+  isPaymentError,
+  isRateLimitError,
   summarizeKeyError,
 } from "@/lib/ai/config";
 import { buildTripifyGraph } from "@/lib/ai/graph";
@@ -112,6 +114,7 @@ export async function POST(request: Request) {
       const seenTools = new Set<string>();
       let text = "";
       let exhaustedKeys = 0;
+      let quotaHits = 0;
       let failed = false;
       let failureCode: string | null = null;
 
@@ -151,7 +154,8 @@ export async function POST(request: Request) {
         try {
           const events = graph.streamEvents(
             { messages: turns },
-            { version: "v2", configurable: { thread_id } },
+            // Bounded tool loops: every extra round is another billed API call.
+            { version: "v2", configurable: { thread_id }, recursionLimit: 12 },
           );
           for await (const event of events) {
             if (request.signal.aborted) break;
@@ -182,13 +186,41 @@ export async function POST(request: Request) {
           // Success (or client abort): stop rotating.
           break;
         } catch (error) {
+          // Empty wallet (402) is terminal: no key can succeed, so stop
+          // at once instead of burning the whole pool.
+          if (isPaymentError(error)) {
+            failureCode = "AI_CREDITS_EXHAUSTED";
+            send(controller, {
+              type: "error",
+              code: "AI_CREDITS_EXHAUSTED",
+              message:
+                "OpenRouter credits exhausted. Top up, then retry.",
+            });
+            text = "";
+            failed = true;
+            break;
+          }
           // Rotate only on key-specific failures with keys remaining and
           // nothing streamed yet; otherwise the reply would be incoherent.
+          // Free-model 429s are account-wide per OpenRouter docs, so three
+          // consecutive quota hits stop the loop instead of burning all keys.
           if (
             isKeyRotationError(error) &&
             attempt < apiKeys.length - 1 &&
             !text
           ) {
+            if (isRateLimitError(error) && ++quotaHits >= 3) {
+              failureCode = "AI_QUOTA_EXHAUSTED";
+              send(controller, {
+                type: "error",
+                code: "AI_QUOTA_EXHAUSTED",
+                message:
+                  "Daily free-model quota reached. Add credits on OpenRouter or try again tomorrow.",
+              });
+              text = "";
+              failed = true;
+              break;
+            }
             exhaustedKeys += 1;
             console.error(
               `Tripify AI key ${attempt + 1} exhausted (${summarizeKeyError(error)}), rotating to next key`,

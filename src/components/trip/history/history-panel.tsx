@@ -101,6 +101,7 @@ export function HistoryPanel({ trip }: { trip: Trip }) {
       })),
     [entries, limit],
   );
+  const [showAll, setShowAll] = useState(false);
   if (!trip.version) return <p>{t("emptyHistory")}</p>;
   function display(value: unknown, field: string, currency: string) {
     if (value === undefined || value === null) return "—";
@@ -117,21 +118,29 @@ export function HistoryPanel({ trip }: { trip: Trip }) {
     if (field === "start_time") return String(value).slice(0, 5);
     return String(value);
   }
-  return (
-    <section className="shared-panel">
-      <TripSettings trip={trip} />
-      <p>{t("version", { version: trip.version })}</p>
-      {loading && <p role="status">{t("loadingHistory")}</p>}
-      {error && (
-        <div role="alert">
-          <p>{t("failed")}</p>
-          <AppButton onClick={() => setRetry((r) => r + 1)}>
-            {t("retry")}
-          </AppButton>
-        </div>
-      )}
-      {!loading && !error && !entries.length && <p>{t("emptyHistory")}</p>}
-      {visible.map(({ entry, previous }) => {
+  const actionLabel = (changeType: string) =>
+    t(
+      (
+        {
+          "trip.created": "trip_create",
+          "trip.updated": "trip_update",
+          "activity.added": "activity_add",
+          "activity.updated": "activity_update",
+          "activity.removed": "activity_remove",
+        } as Record<string, string>
+      )[changeType] ?? "trip_update",
+    );
+  const latest = visible[0];
+  const latestAuthor = latest
+    ? (memberNames.get(latest.entry.actor_user_id) ?? t("formerMember"))
+    : "";
+  const renderEntry = ({
+    entry,
+    previous,
+  }: {
+    entry: EntryMeta;
+    previous?: EntryMeta;
+  }) => {
         const author =
           memberNames.get(entry.actor_user_id) ?? t("formerMember");
         const isOpen = expanded.has(entry.id);
@@ -164,20 +173,8 @@ export function HistoryPanel({ trip }: { trip: Trip }) {
             }}
           >
             <summary>
-              <strong>{t("version", { version: entry.version })}</strong>
               <span>
-                {author} ·{" "}
-                {t(
-                  (
-                    {
-                      "trip.created": "trip_create",
-                      "trip.updated": "trip_update",
-                      "activity.added": "activity_add",
-                      "activity.updated": "activity_update",
-                      "activity.removed": "activity_remove",
-                    } as Record<string, string>
-                  )[entry.change_type] ?? "trip_update",
-                )}
+                {author} · {actionLabel(entry.change_type)}
               </span>
               <time dateTime={entry.created_at}>
                 {new Intl.DateTimeFormat(locale, {
@@ -186,6 +183,7 @@ export function HistoryPanel({ trip }: { trip: Trip }) {
                   timeZone: trip.timezone,
                 }).format(new Date(entry.created_at))}
               </time>
+              <small>{t("version", { version: entry.version })}</small>
             </summary>
             {isOpen && (
               <dl>
@@ -220,8 +218,44 @@ export function HistoryPanel({ trip }: { trip: Trip }) {
             )}
           </details>
         );
-      })}
-      {entries.length >= limit && (
+      };
+  return (
+    <section className="shared-panel">
+      <TripSettings trip={trip} />
+      {loading && <p role="status">{t("loadingHistory")}</p>}
+      {error && (
+        <div role="alert">
+          <p>{t("failed")}</p>
+          <AppButton onClick={() => setRetry((r) => r + 1)}>
+            {t("retry")}
+          </AppButton>
+        </div>
+      )}
+      {!loading && !error && !entries.length && <p>{t("emptyHistory")}</p>}
+      {!loading && !error && latest && !showAll && (
+        <div className="history-summary">
+          <strong>
+            {latestAuthor} · {actionLabel(latest.entry.change_type)}
+          </strong>
+          <p>
+            <time dateTime={latest.entry.created_at}>
+              {new Intl.DateTimeFormat(locale, {
+                dateStyle: "medium",
+                timeStyle: "short",
+                timeZone: trip.timezone,
+              }).format(new Date(latest.entry.created_at))}
+            </time>{" "}
+            · {t("version", { version: latest.entry.version })}
+          </p>
+          <AppButton variant="outline" onClick={() => setShowAll(true)}>
+            {t("olderHistory")}
+          </AppButton>
+        </div>
+      )}
+      {!loading && !error && showAll && (
+        <div className="history-full">{visible.map(renderEntry)}</div>
+      )}
+      {showAll && entries.length >= limit && (
         <AppButton variant="outline" onClick={() => setLimit((n) => n + 50)}>
           {t("olderHistory")}
         </AppButton>

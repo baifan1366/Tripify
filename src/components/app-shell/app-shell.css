@@ -83,23 +83,23 @@
   flex-shrink: 0;
   color: var(--muted-foreground);
 }
-.app-shell :is(.app-rail-action, .app-preview-badge, .app-trip-switcher) {
+.app-shell :is(.app-rail-action, .app-trip-switcher) {
   cursor: pointer;
   transition:
     background-color var(--app-motion-fast) var(--app-ease-ui),
     color var(--app-motion-fast) var(--app-ease-ui);
 }
-.app-shell :is(.app-rail-action, .app-preview-badge, .app-trip-switcher):hover {
+.app-shell :is(.app-rail-action, .app-trip-switcher):hover {
   color: var(--primary);
   background: var(--surface-hover);
 }
 .app-shell
-  :is(.app-rail-action, .app-preview-badge, .app-trip-switcher):active {
+  :is(.app-rail-action, .app-trip-switcher):active {
   background: var(--accent);
   color: var(--primary-active);
 }
 .app-shell
-  :is(.app-rail-action, .app-preview-badge, .app-trip-switcher):focus-visible {
+  :is(.app-rail-action, .app-trip-switcher):focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
@@ -140,7 +140,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .app-shell :is(.app-rail-action, .app-preview-badge, .app-trip-switcher) {
+  .app-shell :is(.app-rail-action, .app-trip-switcher) {
     transition: none;
   }
 }

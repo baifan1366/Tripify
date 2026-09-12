@@ -16,14 +16,34 @@ export type PanelLayout = {
 };
 export type WorkspaceLayout = { version: 1; panels: PanelLayout[] };
 export const layoutStorageKey = "tripify.workspace-layout.v1";
-export const panelMin = (id: PanelId) => (id === "map" ? 320 : 280);
+// Minimum usable widths: below this a panel must collapse/dock instead of
+// shrinking further. Values come from workspace review (Journey 300 / AI 340
+// / Budget 360 / People 360 / History 320).
+const PANEL_MIN: Record<PanelId, number> = {
+  plan: 300,
+  map: 320,
+  ai: 340,
+  chat: 320,
+  decisions: 340,
+  budget: 360,
+  people: 360,
+  history: 320,
+};
+export const panelMin = (id: PanelId) => PANEL_MIN[id] ?? 320;
 export const panelMax = 960;
 export function defaultLayout(): WorkspaceLayout {
   return {
     version: 1,
     panels: panelIds.map((id) => ({
       id,
-      width: id === "map" ? 480 : id === "plan" ? 300 : 340,
+      width:
+        id === "map"
+          ? 480
+          : id === "plan"
+            ? 320
+            : id === "budget" || id === "people"
+              ? 360
+              : 340,
       state: ["plan", "map", "ai"].includes(id) ? "open" : "hidden",
     })),
   };
@@ -45,11 +65,14 @@ export function parseLayout(value: unknown): WorkspaceLayout {
   for (const item of value.panels) {
     if (!item || !panelIds.includes(item.id) || seen.has(item.id)) continue;
     seen.add(item.id);
+    const fallbackWidth =
+      fallback.panels.find((p) => p.id === item.id)?.width ??
+      panelMin(item.id);
     panels.push({
       id: item.id,
       width: Number.isFinite(item.width)
         ? Math.max(panelMin(item.id), Math.min(panelMax, item.width))
-        : 340,
+        : fallbackWidth,
       state: ["open", "collapsed", "hidden"].includes(item.state)
         ? item.state
         : "hidden",

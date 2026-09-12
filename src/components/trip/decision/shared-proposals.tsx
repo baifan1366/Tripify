@@ -23,7 +23,7 @@ import {
 } from "@/lib/trips/proposals";
 import type { Trip } from "@/lib/mvp/model";
 import { useMvp } from "@/components/mvp/mvp-provider";
-import { AppButton, EmptyState, Field } from "@/components/mvp/primitives";
+import { AppButton, Field } from "@/components/mvp/primitives";
 
 /** Live proposal list with realtime + focus/poll revalidation. */
 export function useProposals(tripId: string, enabled: boolean) {
@@ -152,7 +152,7 @@ function fieldLabel(
   return mapped ? t(mapped) : undefined;
 }
 
-function changeSummary(
+export function changeSummary(
   t: (key: string) => string,
   change: ProposalRow["proposal_changes"][number],
 ): string {
@@ -582,10 +582,10 @@ export function SharedProposals({ trip }: { trip: Trip }) {
           ))
         ) : (
           !creating && (
-            <EmptyState
-              title={t("noProposals")}
-              description={t("noProposalsBody")}
-            />
+            <div className="history-summary" role="status">
+              <strong>{t("noProposals")}</strong>
+              <p>{t("noProposalsBody")}</p>
+            </div>
           )
         )}
       </section>

@@ -1,18 +1,17 @@
 /* Flat, independently scrollable work surfaces. Business forms keep their content. */
+/* The shell chrome (status badge row) is hidden inside the workspace: the
+   TripHeader already carries trip/shared/budget/member state, and the old
+   absolute overlay sat on top of it (visual overlap) while exposing a
+   badge that looked clickable but had no action. */
 .app-shell:has(.travel-workspace) .app-shell-chrome {
-  position: absolute;
-  top: 8px;
-  right: 16px;
-  min-height: 44px;
-  padding: 0;
-  z-index: var(--app-z-nav);
+  display: none;
 }
 .travel-workspace.mvp-workspace {
   padding: 0;
 }
 .travel-workspace .mvp-trip-header {
   min-height: 88px;
-  padding: 12px 200px 12px 24px;
+  padding: 12px 24px;
   gap: 24px;
   border-bottom: 1px solid var(--border);
 }
@@ -571,7 +570,7 @@
 }
 @media (max-width: 1199px) {
   .travel-workspace .mvp-trip-header {
-    padding: 8px 190px 8px 16px;
+    padding: 8px 16px;
     gap: 12px;
     flex-wrap: wrap;
   }
@@ -695,7 +694,11 @@
   }
 }
 .google-map-canvas {
-  flex: 1;
+  flex: 1 0 auto;
+  /* Definite height: the Maps API renders into an inner div with
+     height: 100%, which collapses to 0 against min-height-only parents
+     (gray panel, tiles never requested). See official troubleshooting. */
+  height: 420px;
   min-height: 420px;
   width: 100%;
 }
@@ -819,4 +822,609 @@
 .schematic-activity-list button[aria-pressed="true"] {
   color: var(--primary);
   background: var(--accent);
+}
+
+/* === Workspace calm-density overhaul (2026-09 review) ===
+   Goals: readable 14px floor, fewer Excel borders, hover-only chrome,
+   clear splitter feedback, snap-collapse rail, compact toolbar. */
+
+.travel-workspace .mvp-trip-header {
+  min-height: 64px;
+  padding: 10px 24px;
+  gap: 16px;
+  align-items: center;
+}
+.travel-workspace .mvp-trip-header p {
+  font-size: 13px;
+}
+.travel-workspace .mvp-trip-header-end {
+  gap: 20px;
+}
+.mvp-share-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.mvp-share-trigger:hover {
+  background: var(--primary-hover);
+  color: var(--primary-foreground);
+}
+.mvp-share-panel {
+  display: grid;
+  gap: 12px;
+  min-width: min(320px, 80vw);
+}
+
+/* Compact single-strip toolbar: no longer a sparse second header row. */
+.dock-toolbar-compact {
+  min-height: 40px;
+  padding: 2px 16px;
+  gap: 8px;
+  background: var(--card);
+}
+.dock-toolbar-compact .dock-control {
+  min-height: 32px;
+  min-width: 32px;
+  font-size: 13px;
+  padding: 4px 8px;
+}
+.dock-toolbar-compact .dock-chip {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.dock-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+.dock-body {
+  display: flex;
+  align-items: stretch;
+  min-height: 0;
+}
+.dock-body .dock-panels {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.dock-rail {
+  flex: 0 0 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  background: var(--card);
+  border-left: 1px solid var(--border);
+}
+.dock-rail-item {
+  position: relative;
+  width: 40px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  border-radius: 10px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  border: 1px solid transparent;
+}
+.dock-rail-item:hover {
+  background: var(--surface-hover);
+  color: var(--primary);
+  border-color: var(--border);
+}
+.dock-rail-item .dock-badge-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+}
+
+/* Readability floor: body 14px, aux 12px. No 9-11px micro text in panels. */
+.dock-panel-content {
+  font-size: 14px;
+  line-height: 1.55;
+}
+.dock-panel-content small,
+.dock-panel-content .mvp-hint,
+.travel-map-context,
+.travel-map-footnote,
+.journey-timezone,
+.decision-quiet {
+  font-size: 12px !important;
+  line-height: 1.6;
+}
+.dock-panel-heading h2 {
+  font-size: 14px;
+}
+
+/* Calm surfaces: keep panel separators, drop internal Excel grid. */
+.dock-panel {
+  border-right: 1px solid var(--border);
+}
+.dock-panel .mvp-card {
+  border: 0;
+  border-radius: 12px;
+  background: var(--background);
+  box-shadow: none;
+  margin-bottom: 12px;
+}
+.dock-panel .mvp-cost-row,
+.shared-member,
+.history-entry {
+  border-top: 0;
+  border-bottom: 1px solid var(--border);
+}
+.dock-panel-heading {
+  border-bottom: 1px solid var(--border);
+}
+
+/* Quiet chrome: drag handle + overflow only on hover / active / focus. */
+.dock-panel-heading .dock-drag,
+.dock-panel-heading .dock-panel-menu {
+  opacity: 0;
+  transition: opacity 120ms var(--app-ease-ui);
+}
+.dock-panel:hover .dock-drag,
+.dock-panel:hover .dock-panel-menu,
+.dock-panel[data-active="true"] .dock-drag,
+.dock-panel[data-active="true"] .dock-panel-menu,
+.dock-panel:focus-within .dock-drag,
+.dock-panel:focus-within .dock-panel-menu {
+  opacity: 1;
+}
+@media (hover: none) {
+  .dock-panel-heading .dock-drag,
+  .dock-panel-heading .dock-panel-menu {
+    opacity: 1;
+  }
+}
+
+/* Splitter: 12px hit zone, 2-4px visible feedback, preview while dragging. */
+.dock-splitter {
+  width: 12px;
+  right: -6px;
+}
+.dock-splitter::after {
+  left: 5px;
+  width: 2px;
+  border-radius: 2px;
+}
+.dock-splitter:hover::after,
+.dock-splitter:focus-visible::after {
+  width: 3px;
+  left: 4.5px;
+  background: var(--primary);
+}
+.dock-panel[data-resizing="true"] {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+.dock-panel[data-resizing="true"] .dock-splitter::after {
+  width: 4px;
+  left: 4px;
+  background: var(--primary);
+}
+.dock-workspace[data-resizing] {
+  cursor: col-resize;
+  user-select: none;
+}
+.dock-workspace[data-resizing] .dock-panel-content {
+  pointer-events: none;
+}
+
+/* Journey: hero day + rail + calm timeline hierarchy. */
+.journey-hero {
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.journey-hero-eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  margin: 0 0 2px;
+}
+.journey-hero-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.journey-hero-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.journey-neighbours {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 4px;
+}
+.journey-neighbours > button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--muted-foreground);
+}
+.journey-neighbours > button:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--primary);
+}
+.journey-neighbour-track {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.journey-neighbour {
+  min-height: 52px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  gap: 1px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+  border: 1px solid transparent;
+}
+.journey-neighbour small {
+  font-size: 12px;
+}
+.journey-neighbour[data-current="true"] {
+  background: var(--accent);
+  color: var(--primary);
+  border-color: var(--primary);
+  font-weight: 700;
+}
+.journey-neighbour:hover {
+  background: var(--surface-hover);
+}
+.journey-jump {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px 10px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.journey-jump select {
+  flex: 1;
+  min-height: 36px;
+  font-size: 13px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 8px;
+  color: var(--foreground);
+}
+.journey-rail-legacy {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 0 12px 8px;
+}
+.journey-rail-legacy button {
+  flex: 0 0 auto;
+  min-width: 44px;
+  min-height: 36px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+  padding: 4px 10px;
+}
+.journey-rail-legacy button[aria-pressed="true"] {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Timeline: primary time/title/place, secondary muted, actions on hover. */
+.dock-panel .mvp-timeline {
+  padding: 12px 12px 24px;
+}
+.dock-panel .mvp-activity-card {
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  padding: 10px 12px;
+  gap: 2px;
+}
+.dock-panel .mvp-activity-card:hover {
+  background: var(--surface-hover);
+}
+.dock-panel .mvp-activity-card[aria-pressed="true"] {
+  background: var(--accent);
+  box-shadow: inset 3px 0 0 var(--primary);
+  border: 0;
+}
+.dock-panel .mvp-activity-card strong {
+  font-size: 15px;
+  line-height: 1.4;
+  margin: 2px 0;
+}
+.dock-panel .mvp-activity-time {
+  font-size: 13px;
+  font-weight: 700;
+}
+.dock-panel .mvp-activity-card > small {
+  font-size: 13px;
+}
+.dock-panel .mvp-activity-meta {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.journey-card-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.journey-card-row > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.journey-card-menu {
+  opacity: 0;
+  flex-shrink: 0;
+}
+.mvp-activity-card:hover .journey-card-menu,
+.mvp-activity-card:focus-visible .journey-card-menu,
+.mvp-activity-card[aria-pressed="true"] .journey-card-menu {
+  opacity: 1;
+}
+@media (hover: none) {
+  .journey-card-menu {
+    opacity: 1;
+  }
+}
+.journey-card-menu .dock-control {
+  min-width: 32px;
+  min-height: 32px;
+}
+.journey-highlight {
+  background: var(--accent);
+}
+
+/* AI: live panel, not documentation. */
+.ai-live {
+  padding: 12px 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ai-live-head h2 {
+  font-size: 15px;
+  margin: 0;
+}
+.ai-live-head p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.ai-context-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  background: var(--accent);
+  color: var(--primary);
+  border-radius: 999px;
+  padding: 4px 10px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-chat .ai-chat-log {
+  max-height: 46vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 2px;
+}
+
+/* Budget: single calm summary. */
+.budget-calm {
+  padding: 14px 14px 20px;
+  display: grid;
+  gap: 12px;
+}
+.budget-calm-top small {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.budget-calm-amounts {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.budget-calm-amounts strong {
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.budget-calm-amounts span {
+  font-size: 14px;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+.budget-calm-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.budget-calm-track i {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+  border-radius: inherit;
+}
+.budget-calm-sub {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.budget-calm-sub span {
+  color: var(--muted-foreground);
+}
+.budget-calm[data-over="true"] .budget-calm-track i {
+  background: var(--destructive);
+}
+.budget-day-list {
+  display: grid;
+}
+.budget-day-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 2px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+}
+.budget-day-row small {
+  color: var(--muted-foreground);
+  margin-right: 8px;
+}
+.budget-day-row strong {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.budget-day-row[data-active="true"] {
+  background: var(--accent);
+  margin: 0 -8px;
+  padding-inline: 8px;
+  border-radius: 8px;
+}
+
+/* People: rail first, detail on demand. */
+.people-rail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+}
+.people-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+.people-chip[aria-pressed="true"] {
+  border-color: var(--primary);
+  background: var(--accent);
+  color: var(--primary);
+}
+.people-chip .mvp-avatar {
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
+}
+.people-add {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px dashed var(--input);
+  display: grid;
+  place-items: center;
+  color: var(--muted-foreground);
+}
+.people-detail {
+  border-top: 1px solid var(--border);
+  padding: 12px 14px 20px;
+}
+.people-invite-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+/* History: summary first, full timeline on demand. */
+.history-summary {
+  padding: 12px 14px;
+  display: grid;
+  gap: 6px;
+}
+.history-summary strong {
+  font-size: 14px;
+}
+.history-summary p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+.history-full {
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding: 8px 14px 20px;
+}
+
+/* Selected-activity linkage highlight. */
+.dock-panel[data-context="active"] .dock-panel-heading h2 {
+  color: var(--primary);
+}
+.journey-edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 2px 0 8px 28px;
+  opacity: 0;
+}
+.mvp-timeline-stop:hover .journey-edit-actions,
+.mvp-timeline-stop:focus-within .journey-edit-actions,
+.mvp-timeline-stop[data-selected="true"] .journey-edit-actions {
+  opacity: 1;
+}
+@media (hover: none) {
+  .journey-edit-actions {
+    opacity: 1;
+  }
+}
+.journey-edit-actions .journey-quiet-btn {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+.journey-confirm {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  flex-basis: 100%;
+}
+.mvp-ai-reduce {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+.mvp-ai-reduce .mvp-muted {
+  font-size: 12px;
 }

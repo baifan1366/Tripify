@@ -15,7 +15,12 @@ export function SharedPeople({ trip }: { trip: Trip }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [removing, setRemoving] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const self = trip.members.find((m) => m.id === viewer.id) ?? null;
+  const selected =
+    trip.members.find((m) => m.id === (selectedId ?? viewer.id)) ??
+    trip.members[0] ??
+    null;
   async function invite() {
     setPending(true);
     setError("");
@@ -50,86 +55,114 @@ export function SharedPeople({ trip }: { trip: Trip }) {
   }
   return (
     <section className="shared-panel" aria-label={t("people")}>
-      {trip.members.map((member) => (
-        <div className="shared-member" key={member.id}>
-          <span className="mvp-avatar" aria-hidden="true">
-            {member.name.slice(0, 1)}
+      <div className="people-rail" role="group" aria-label={t("people")}>
+        {trip.members.map((member) => (
+          <button
+            key={member.id}
+            type="button"
+            className="people-chip"
+            aria-pressed={selected?.id === member.id}
+            onClick={() => {
+              setSelectedId(member.id);
+              setRemoving(null);
+            }}
+            title={member.name}
+          >
+            <span className="mvp-avatar" aria-hidden="true">
+              {member.name.slice(0, 1)}
+            </span>
+            {member.name.split(" ")[0]}
+          </button>
+        ))}
+        {viewer.id === trip.createdBy && (
+          <span className="people-invite-row">
+            <AppButton
+              variant="outline"
+              disabled={pending}
+              onClick={() => void invite()}
+            >
+              {t("invite")}
+            </AppButton>
           </span>
-          <div>
-            <strong>{member.name}</strong>
-            <small>
-              {member.id === viewer.id && t("you")}
-              {member.id === trip.createdBy && ` · ${t("owner")}`}
-            </small>
-            {removing === member.id && (
-              <p>{t("confirmRemove", { name: member.name })}</p>
-            )}
-          </div>
-          {viewer.id === trip.createdBy && member.id !== viewer.id && (
+        )}
+      </div>
+      {selected && (
+        <div className="people-detail">
+          <div className="shared-member" key={selected.id}>
+            <span className="mvp-avatar" aria-hidden="true">
+              {selected.name.slice(0, 1)}
+            </span>
             <div>
-              {removing === member.id ? (
-                <>
+              <strong>{selected.name}</strong>
+              <small>
+                {selected.id === viewer.id && t("you")}
+                {selected.id === trip.createdBy && ` · ${t("owner")}`}
+              </small>
+              {removing === selected.id && (
+                <p>{t("confirmRemove", { name: selected.name })}</p>
+              )}
+            </div>
+            {viewer.id === trip.createdBy && selected.id !== viewer.id && (
+              <div>
+                {removing === selected.id ? (
+                  <>
+                    <AppButton
+                      disabled={pending}
+                      variant="outline"
+                      onClick={() => setRemoving(null)}
+                    >
+                      {t("cancel")}
+                    </AppButton>
+                    <AppButton
+                      disabled={pending}
+                      onClick={() => void remove(selected.id)}
+                    >
+                      {t("remove")}
+                    </AppButton>
+                  </>
+                ) : (
                   <AppButton
                     disabled={pending}
                     variant="outline"
-                    onClick={() => setRemoving(null)}
-                  >
-                    {t("cancel")}
-                  </AppButton>
-                  <AppButton
-                    disabled={pending}
-                    onClick={() => void remove(member.id)}
+                    onClick={() => setRemoving(selected.id)}
                   >
                     {t("remove")}
                   </AppButton>
-                </>
-              ) : (
-                <AppButton
-                  disabled={pending}
-                  variant="outline"
-                  onClick={() => setRemoving(member.id)}
-                >
-                  {t("remove")}
-                </AppButton>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      ))}
-      {viewer.id === trip.createdBy && (
+      )}
+      {viewer.id === trip.createdBy && token && (
         <div className="shared-invite">
-          <AppButton disabled={pending} onClick={() => void invite()}>
-            {t("invite")}
+          <Field
+            label={t("code")}
+            value={token}
+            readOnly
+            onFocus={(e) => e.target.select()}
+            hint={t("inviteHint")}
+          />
+          <AppButton
+            variant="outline"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(token);
+                setNotice(t("copied"));
+              } catch {
+                setError(t("failed"));
+              }
+            }}
+          >
+            {t("copy")}
           </AppButton>
-          {token && (
-            <>
-              <Field
-                label={t("code")}
-                value={token}
-                readOnly
-                onFocus={(e) => e.target.select()}
-                hint={t("inviteHint")}
-              />
-              <AppButton
-                variant="outline"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(token);
-                    setNotice(t("copied"));
-                  } catch {
-                    setError(t("failed"));
-                  }
-                }}
-              >
-                {t("copy")}
-              </AppButton>
-            </>
-          )}
         </div>
       )}
       {pending && <p role="status">{t("pending")}</p>}
       {error && <p role="alert">{error}</p>}
-      {self && <MemberPreferencesForm trip={trip} member={self} />}
+      {self && selected?.id === self.id && (
+        <MemberPreferencesForm trip={trip} member={self} />
+      )}
     </section>
   );
 }

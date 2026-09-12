@@ -120,15 +120,28 @@ export const DayTimeline = memo(function DayTimeline({
       setPending(false);
     }
   }
+  const money = (n: number) =>
+    new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: trip.currency,
+      maximumFractionDigits: 2,
+    }).format(n);
   return (
     <div className="mvp-timeline" ref={root}>
-      {items.map((item, i) => (
-        <div key={item.id} className="mvp-timeline-stop">
-          <div className="mvp-timeline-dot">{i + 1}</div>
+      {items.map((item, i) => {
+        const isSelected = selected === item.id;
+        return (
+        <div
+          key={item.id}
+          className="mvp-timeline-stop"
+          data-selected={isSelected}
+          data-context={isSelected ? "active" : undefined}
+        >
+          <div className="mvp-timeline-dot" aria-hidden="true">{i + 1}</div>
           <button
             type="button"
             className="mvp-activity-card"
-            aria-pressed={selected === item.id}
+            aria-pressed={isSelected}
             onClick={() => onSelect(item.id)}
             data-hovered={hovered === item.id}
             onMouseEnter={() => onHover(item.id)}
@@ -136,31 +149,22 @@ export const DayTimeline = memo(function DayTimeline({
             onFocus={() => onHover(item.id)}
             onBlur={() => onHover(null)}
           >
-            <span className="mvp-activity-time">
-              {item.time}
-              <span>
-                <Clock3 size={12} />
-                {t("minutes", { count: item.duration })}
-              </span>
-            </span>
+            <span className="mvp-activity-time">{item.time}</span>
             <strong>{item.title}</strong>
             <small>
-              <MapPin size={12} />
+              <MapPin size={13} aria-hidden="true" />
               {item.place}
             </small>
-            <span className="mvp-activity-bottom">
-              {new Intl.NumberFormat(locale, {
-                style: "currency",
-                currency: trip.currency,
-                maximumFractionDigits: 2,
-              }).format(item.cost)}
-              <span>↗</span>
+            <span className="mvp-activity-meta">
+              <Clock3 size={12} aria-hidden="true" />
+              {t("minutes", { count: item.duration })} · {money(item.cost)}
             </span>
           </button>
-          {canEdit && selected === item.id && (
-            <div className="journey-edit-actions">
+          {canEdit && isSelected && (
+            <div className="journey-edit-actions" data-reveal="hover">
               <AppButton
                 variant="outline"
+                className="journey-quiet-btn"
                 disabled={pending}
                 onClick={() => {
                   setEditing(item);
@@ -188,17 +192,19 @@ export const DayTimeline = memo(function DayTimeline({
               </AppButton>
               {removing === item.id ? (
                 <>
-                  <span>
+                  <span className="journey-confirm">
                     {shared("confirmActivityRemove", { title: item.title })}
                   </span>
                   <AppButton
                     variant="outline"
+                    className="journey-quiet-btn"
                     disabled={pending}
                     onClick={() => setRemoving(null)}
                   >
                     {shared("cancel")}
                   </AppButton>
                   <AppButton
+                    className="journey-quiet-btn"
                     disabled={pending || conflict}
                     onClick={async () => {
                       setPending(true);
@@ -229,6 +235,7 @@ export const DayTimeline = memo(function DayTimeline({
               ) : (
                 <AppButton
                   variant="outline"
+                  className="journey-quiet-btn"
                   disabled={pending}
                   onClick={() => {
                     setRemoving(item.id);
@@ -257,7 +264,8 @@ export const DayTimeline = memo(function DayTimeline({
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
       {!items.length && (
         <div className="mvp-inline-empty">
           <p>{w("emptyDay")}</p>
