@@ -116,9 +116,9 @@ function check(name, fn) {
   });
   check("key pool parses single, list and numbered keys with dedupe", () => {
     const keys = config.collectApiKeys({
-      OPENROUTER_API_KEY: "k1",
+      OPENROUTER_API_KEY: '"k1"',
       OPENROUTER_API_KEYS: "k2, k1\nk3",
-      OPEN_ROUTER_KEY_1: "k4",
+      OPEN_ROUTER_KEY_1: "'k4'",
       OPENROUTER_API_KEY_2: "k2",
     });
     assert.deepEqual(keys, ["k1", "k2", "k3", "k4"]);
@@ -141,6 +141,11 @@ function check(name, fn) {
       true,
     );
     assert.equal(config.isKeyRotationError(new Error("socket hang up")), false);
+    assert.equal(config.summarizeKeyError({ status: 429 }), "HTTP 429");
+    assert.equal(
+      config.summarizeKeyError(new Error("boom")),
+      "boom",
+    );
   });
   check("default model is Gemma free tier", () => {
     assert.equal(

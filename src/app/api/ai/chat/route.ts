@@ -2,6 +2,7 @@ import {
   AiConfigError,
   getAiConfig,
   isKeyRotationError,
+  summarizeKeyError,
 } from "@/lib/ai/config";
 import { buildTripifyGraph } from "@/lib/ai/graph";
 import { tripThreadId } from "@/lib/ai/model";
@@ -190,7 +191,7 @@ export async function POST(request: Request) {
           ) {
             exhaustedKeys += 1;
             console.error(
-              `Tripify AI key ${attempt + 1} exhausted, rotating to next key`,
+              `Tripify AI key ${attempt + 1} exhausted (${summarizeKeyError(error)}), rotating to next key`,
             );
             continue;
           }

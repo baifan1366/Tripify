@@ -27,11 +27,17 @@ export class AiConfigError extends Error {
   }
 }
 
+function cleanKey(value: string | undefined): string {
+  // Vercel values are sometimes pasted with literal surrounding quotes.
+  // A quoted key is always rejected (401), so strip them everywhere.
+  return (value ?? "").trim().replace(/^["']|["']$/g, "");
+}
+
 function splitList(value: string | undefined): string[] {
   if (!value) return [];
   return value
     .split(/[\n,]+/)
-    .map((part) => part.trim().replace(/^["']|["']$/g, ""))
+    .map((part) => cleanKey(part))
     .filter((part) => part.length > 0);
 }
 
@@ -45,13 +51,14 @@ export function collectApiKeys(
   env: Record<string, string | undefined> = process.env,
 ): string[] {
   const keys: string[] = [];
-  if (env.OPENROUTER_API_KEY) keys.push(env.OPENROUTER_API_KEY.trim());
+  const single = cleanKey(env.OPENROUTER_API_KEY);
+  if (single) keys.push(single);
   keys.push(...splitList(env.OPENROUTER_API_KEYS));
   for (let i = 1; i <= MAX_NUMBERED_KEYS; i++) {
-    const a = env[`OPENROUTER_API_KEY_${i}`];
-    const b = env[`OPEN_ROUTER_KEY_${i}`];
-    if (a?.trim()) keys.push(a.trim());
-    if (b?.trim()) keys.push(b.trim());
+    const a = cleanKey(env[`OPENROUTER_API_KEY_${i}`]);
+    const b = cleanKey(env[`OPEN_ROUTER_KEY_${i}`]);
+    if (a) keys.push(a);
+    if (b) keys.push(b);
   }
   return [...new Set(keys.filter((key) => key.length > 0))];
 }
@@ -109,6 +116,19 @@ export function isKeyRotationError(error: unknown): boolean {
   return /rate.?limit|too many requests|quota|insufficient (credits|balance|funds)|invalid (api.?key|key)|unauthorized|payment required/i.test(
     message,
   );
+}
+
+/** Short, key-safe summary for rotation logs (status code, never key material). */
+export function summarizeKeyError(error: unknown): string {
+  const status = errorStatus(error);
+  if (status) return `HTTP ${status}`;
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "object" && error !== null && "message" in error
+        ? String((error as { message: unknown }).message)
+        : String(error ?? "");
+  return message.slice(0, 100) || "unknown error";
 }
 
 export const TRIPIFY_DEFAULT_MODEL = TRIPIFY_MODEL;
