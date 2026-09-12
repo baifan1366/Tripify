@@ -20,6 +20,15 @@ export function getPublicEnv() {
   });
 }
 
+export function isAuthConfigured() {
+  const result = publicSchema.safeParse({
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  });
+  return result.success && !result.data.NEXT_PUBLIC_SUPABASE_URL.includes("your-project") &&
+    !result.data.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.startsWith("your_");
+}
+
 export function getServerEnv() {
   return serverSchema.parse({
     ...process.env,
