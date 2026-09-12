@@ -47,7 +47,17 @@ export async function calculateRoute(
           }),
         },
       );
-      if (!res.ok) throw new Error("ROUTE_UNAVAILABLE");
+      if (!res.ok) {
+        // Surface Google's status + message (no key material in the body)
+        // so function logs can tell key/billing issues apart from no-route.
+        let detail = "";
+        try {
+          detail = (await res.text()).slice(0, 300);
+        } catch {
+          /* ignore body read failures */
+        }
+        throw new Error(`ROUTE_UPSTREAM_${res.status} ${detail}`.trim());
+      }
       const route = response.parse(await res.json()).routes?.[0];
       if (!route) throw new Error("ROUTE_UNAVAILABLE");
       return {
