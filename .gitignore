@@ -43,6 +43,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# test artifacts
+scripts/.tmp-ai-*
+
 /diagram-design
 /docs/pitch/build-deck.js
 /docs/pitch/fix_ppr.py

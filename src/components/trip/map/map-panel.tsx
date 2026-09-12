@@ -100,7 +100,20 @@ export const MapPanel = memo(function MapPanel({
           {shared(routing.pending ? "calculating" : "calculateRoutes")}
         </button>
         <p>{shared("routeEstimate")}</p>
-        {routing.error && <p role="status">{shared("routeUnavailable")}</p>}
+        {routing.error && (
+          <p role="status">
+            {shared(
+              routing.errorCode === "MAPS_UNCONFIGURED"
+                ? "routeUnconfigured"
+                : "routeUnavailable",
+            )}
+          </p>
+        )}
+        {!routing.error && routing.skipped > 0 && (
+          <p className="travel-map-context" role="status">
+            {shared("routeNoCoordinates", { count: routing.skipped })}
+          </p>
+        )}
       </div>
       {lens === "risk" && (
         <p className="travel-map-context" role="status">

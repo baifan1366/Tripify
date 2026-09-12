@@ -373,6 +373,9 @@ function check(name, fn) {
       "utf8",
     );
     assert.match(routesSrc, /partial/);
+    assert.match(routesSrc, /skippedNoCoordinates/);
+    assert.match(routesSrc, /MAPS_UNCONFIGURED/);
+    assert.match(routesSrc, /tripify:maps/);
     const shellSrc = fs.readFileSync(
       path.join(ROOT, "src/components/mvp/mvp-shell.tsx"),
       "utf8",
@@ -416,6 +419,45 @@ function check(name, fn) {
     );
     assert.match(canvasSrc, /TilesWatchdog/);
     assert.match(canvasSrc, /tilesloaded/);
+  });
+
+  check("debug logs are gated and never carry secrets", () => {
+    const debugSrc = fs.readFileSync(
+      path.join(ROOT, "src/lib/debug.ts"),
+      "utf8",
+    );
+    assert.match(debugSrc, /isDebugEnabled/);
+    assert.match(debugSrc, /NEXT_PUBLIC_DEBUG/);
+    for (const rel of [
+      "src/lib/maps/google-map-provider.tsx",
+      "src/components/trip/map/google-canvas.tsx",
+      "src/lib/maps/use-routes.ts",
+      "src/components/trip/map/places-field.tsx",
+      "src/app/api/maps/routes/route.ts",
+      "src/app/api/weather/route.ts",
+      "src/lib/maps/use-trip-weather.ts",
+    ]) {
+      const src = fs.readFileSync(path.join(ROOT, rel), "utf8");
+      assert.match(src, /debugLog\(/, rel);
+    }
+    // No debug call may reference a key variable or dump interpolate secrets.
+    const secretPatterns = [
+      /debugLog\([^)]*apiKey/i,
+      /debugLog\([^)]*API_KEY/i,
+      /debugLog\([^)]*token/i,
+    ];
+    const allSrc = [
+      "src/lib/maps/google-map-provider.tsx",
+      "src/components/trip/map/google-canvas.tsx",
+      "src/lib/maps/use-routes.ts",
+      "src/components/trip/map/places-field.tsx",
+      "src/app/api/maps/routes/route.ts",
+      "src/lib/weather/open-meteo.ts",
+    ]
+      .map((rel) => fs.readFileSync(path.join(ROOT, rel), "utf8"))
+      .join("\n");
+    for (const pattern of secretPatterns)
+      assert.doesNotMatch(allSrc, pattern);
   });
 
   check("budget panel asks AI and reuses the proposal draft flow", () => {

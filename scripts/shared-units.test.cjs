@@ -100,6 +100,7 @@ test("Routes handler refuses unauthenticated/outsider requests before any paid A
   };
   const handler = load("src/app/api/maps/routes/route.ts", {
     "@/lib/supabase/server": { createClient: async () => client },
+    "@/lib/debug": { debugLog: () => {} },
     "@/lib/maps/routes": {
       calculateRoute: async () => {
         paid++;

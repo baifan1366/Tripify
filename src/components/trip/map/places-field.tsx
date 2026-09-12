@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMapsLibrary } from "@vis.gl/react-google-maps";
 import { useTranslations } from "next-intl";
 import { useMapsEnabled } from "@/lib/maps/google-map-provider";
+import { debugLog } from "@/lib/debug";
 import { resolvePrediction } from "@/lib/maps/places";
 import type { PlaceSelection } from "@/lib/maps/types";
 import { Field } from "@/components/mvp/primitives";
@@ -20,6 +21,9 @@ export function PlacesField({
   const t = useTranslations("shared");
   const m = useTranslations("mvp");
   const enabled = useMapsEnabled();
+  // Missing key (never configured) vs load failure need different fixes,
+  // so they get different messages instead of one generic hint.
+  const hasKey = !!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   return (
     <div className="places-field">
       {enabled && <SearchPlace onSelect={onSelect} />}
@@ -32,7 +36,11 @@ export function PlacesField({
         required
         error={error}
       />
-      {!enabled && <p className="mvp-hint">{t("placesUnavailable")}</p>}
+      {!enabled && (
+        <p className="mvp-hint">
+          {t(hasKey ? "placesUnavailable" : "placesUnconfigured")}
+        </p>
+      )}
     </div>
   );
 }
@@ -50,7 +58,12 @@ function SearchPlace({
     callback.current = onSelect;
   }, [onSelect]);
   useEffect(() => {
-    if (!library || !host.current) return;
+    if (!library) {
+      debugLog("maps", "places library not loaded yet");
+      return;
+    }
+    if (!host.current) return;
+    debugLog("maps", "places widget mounting");
     const widget = new library.PlaceAutocompleteElement();
     widget.setAttribute("aria-label", t("searchPlace"));
     let active = true;
@@ -59,15 +72,23 @@ function SearchPlace({
     ) => {
       try {
         const place = await resolvePrediction(event.placePrediction);
+        debugLog("maps", "place resolved", {
+          name: place.name,
+          hasCoords: place.latitude !== undefined,
+        });
         if (active) {
           callback.current(place);
           setError(false);
         }
       } catch {
+        console.warn("[tripify:maps] place resolve failed");
         if (active) setError(true);
       }
     };
-    const failed = () => setError(true);
+    const failed = () => {
+      console.warn("[tripify:maps] places widget error");
+      setError(true);
+    };
     widget.addEventListener("gmp-select", select);
     widget.addEventListener("gmp-error", failed);
     host.current.appendChild(widget);

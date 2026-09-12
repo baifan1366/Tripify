@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { debugLog } from "@/lib/debug";
 import { fetchTripForecast } from "@/lib/weather/open-meteo";
 
 export const runtime = "nodejs";
@@ -44,11 +45,19 @@ export async function GET(request: Request) {
       start_date: string;
       end_date: string;
     };
+    debugLog("maps", "weather request", {
+      trip: input.data.trip,
+      destination: row.destination,
+    });
     const forecast = await fetchTripForecast(
       row.destination,
       row.start_date,
       row.end_date,
     );
+    debugLog("maps", "weather response", {
+      place: forecast.place,
+      days: forecast.days.length,
+    });
     const body = { ...forecast, fetchedAt: new Date().toISOString() };
     if (cache.size >= 200) {
       const oldest = cache.keys().next();

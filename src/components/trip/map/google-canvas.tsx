@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { debugLog } from "@/lib/debug";
 import {
   AdvancedMarker,
   Map,
@@ -36,6 +37,14 @@ export function GoogleCanvas({
   const status = useApiLoadingStatus();
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
   const points = items.filter((item) => coordinates(item));
+  useEffect(() => {
+    debugLog("maps", "canvas status", {
+      status,
+      hasMapId: !!mapId,
+      items: items.length,
+      points: points.length,
+    });
+  }, [status, mapId, items.length, points.length]);
   // Tiles can stay gray with status LOADED (referrer-blocked key, billing
   // off, bad Map ID). The watchdog turns that silent gray into the fallback.
   const [tilesStuck, setTilesStuck] = useState(false);
@@ -200,7 +209,12 @@ function TilesWatchdog({ onStuck }: { onStuck: () => void }) {
       settled = true;
     });
     const timer = setTimeout(() => {
-      if (!settled) onStuck();
+      if (!settled) {
+        console.warn(
+          "[tripify:maps] map tiles never loaded (12s) — likely key restrictions, billing, or Map ID. Falling back.",
+        );
+        onStuck();
+      }
     }, 12000);
     return () => {
       clearTimeout(timer);

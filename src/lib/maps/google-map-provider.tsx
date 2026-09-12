@@ -1,6 +1,7 @@
 "use client";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { createContext, useContext, type ReactNode } from "react";
+import { debugLog } from "@/lib/debug";
 const Enabled = createContext(false);
 export function GoogleMapProvider({
   children,
@@ -10,6 +11,8 @@ export function GoogleMapProvider({
   enabled: boolean;
 }) {
   const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  // Presence only: never log the key itself.
+  debugLog("maps", "provider init", { enabled, hasKey: !!key });
   if (!enabled || !key)
     return <Enabled.Provider value={false}>{children}</Enabled.Provider>;
   // Google loads once per document. Omit language so browser preference remains stable across locale navigation.
