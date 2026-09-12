@@ -210,6 +210,16 @@ function TilesWatchdog({ onStuck }: { onStuck: () => void }) {
     });
     const timer = setTimeout(() => {
       if (!settled) {
+        try {
+          const center = map.getCenter()?.toJSON();
+          debugLog("maps", "tiles stuck", {
+            center,
+            zoom: map.getZoom(),
+            mapType: map.getMapTypeId(),
+          });
+        } catch {
+          /* ignore introspection failures */
+        }
         console.warn(
           "[tripify:maps] map tiles never loaded (12s) — likely key restrictions, billing, or Map ID. Falling back.",
         );
