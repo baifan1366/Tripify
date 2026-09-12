@@ -1,8 +1,10 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { Send, Sparkles, Square } from "lucide-react";
-import { useRef, useState, type FormEvent } from "react";
+import { Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { MessageComposer } from "../chat/message-composer";
+import { MarkdownAnswer } from "./markdown-answer";
 import { AppButton } from "@/components/mvp/primitives";
 import { usePersistentDraft } from "@/lib/trips/drafts";
 
@@ -50,6 +52,12 @@ export function AiChat({
   const abortRef = useRef<AbortController | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const stickRef = useRef(true);
+
+  useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(() => {
+    if (logRef.current && stickRef.current)
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+  }, [turns, streamText]);
 
   function nearBottom() {
     const el = logRef.current;
@@ -154,8 +162,12 @@ export function AiChat({
       } else if (!userController.signal.aborted && !error) {
         setError(t("aiFailed"));
       }
-    } catch (e) {
-      if (e instanceof DOMException && e.name === "AbortError") {
+    } catch {
+      if (signal.aborted) {
+        if (full.trim()) {
+          setTurns((all) => [...all, { role: "assistant", content: full }]);
+          setStreamText("");
+        }
         // Our 90s cap, not the user's Stop button.
         if (timeout.aborted && !userController.signal.aborted) {
           setError(t("aiTimeout"));
@@ -184,11 +196,6 @@ export function AiChat({
     stickRef.current = true;
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
     void ask(next);
-  }
-
-  function send(event: FormEvent) {
-    event.preventDefault();
-    sendText(input);
   }
 
   function retry() {
@@ -230,8 +237,8 @@ export function AiChat({
             >
               <Sparkles size={18} aria-hidden="true" />
               <div>
-                <h3>✦ {t("ai")}</h3>
-                <p className="ai-chat-text">{turn.content}</p>
+                <h3>{t("ai")}</h3>
+                <MarkdownAnswer text={turn.content} />
               </div>
             </article>
           ),
@@ -243,7 +250,7 @@ export function AiChat({
           >
             <Sparkles size={18} aria-hidden="true" />
             <div>
-              <h3>✦ {t("ai")}</h3>
+              <h3>{t("ai")}</h3>
               <p role="status" className="decision-quiet">
                 {researching
                   ? `${t("aiResearching")}${researchTools.length ? ` · ${researchTools.join(", ")}` : ""}${slow ? ` · ${t("aiSlow")}` : ""}`
@@ -253,7 +260,7 @@ export function AiChat({
                       : t("aiThinking")
                     : ""}
               </p>
-              {streamText && <p className="ai-chat-text">{streamText}</p>}
+              {streamText && <MarkdownAnswer text={streamText} />}
             </div>
           </article>
         )}
@@ -278,39 +285,17 @@ export function AiChat({
         </div>
       )}
 
-      <form className="mvp-composer" noValidate onSubmit={send}>
-        <label htmlFor={`ai-input-${tripId}`}>{t("aiPlaceholder")}</label>
-        <textarea
-          id={`ai-input-${tripId}`}
-          className="resize-none"
-          rows={3}
-          maxLength={4000}
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          placeholder={t("aiPlaceholder")}
-          disabled={streaming}
-        />
-        <div>
-          {streaming ? (
-            <AppButton
-              type="button"
-              variant="outline"
-              aria-label={t("aiStop")}
-              onClick={() => abortRef.current?.abort()}
-            >
-              <Square size={16} />
-            </AppButton>
-          ) : (
-            <AppButton
-              type="submit"
-              disabled={!input.trim()}
-              aria-label={t("aiSend")}
-            >
-              <Send size={16} />
-            </AppButton>
-          )}
-        </div>
-      </form>
+      <MessageComposer
+        value={input}
+        onChange={setInput}
+        onSend={() => sendText(input)}
+        label={t("aiPlaceholder")}
+        sendLabel={t("aiSend")}
+        busy={streaming}
+        stopLabel={t("aiStop")}
+        onStop={() => abortRef.current?.abort()}
+        context={t("ai")}
+      />
     </section>
   );
 }

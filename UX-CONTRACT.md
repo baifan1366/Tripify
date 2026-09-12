@@ -1,5 +1,18 @@
 # UX Contract
 
+## Current UI refinement contract (2026-09-13)
+
+This section supersedes historical theme/composer/share descriptions below.
+
+- Both App light/dark palettes are supported; AccountMenu owns the persisted choice. Dashboard/create have no inert Shared trip header badge.
+- Widget resize affordances are hidden and noninteractive outside Edit layout. Title padding remains intentional when the grip is absent. Journey edit/remove stay available beside a selected stop at compact/medium widths.
+- AI and group chat use one composer. Enter sends unless IME is composing; Shift+Enter inserts a line. AI renders real streamed Markdown, supports Stop, and retains received partial text when stopped. Raw HTML is skipped, links use safe URL handling, and model-provided images do not load remote resources.
+- Join is a named button opening the canonical AppPopover, with inline code validation and failure recovery. People creates the invitation in a compact portaled popover beside its trigger; no resize is needed to read/copy it.
+- Create stores optional travel style (maximum 400 characters) in the creator's existing per-trip `interests` preference, which AI member tools read. No new schema or global preference is introduced. If preference saving fails after trip creation, the form retains the created ID and retries without another create RPC. Currency/timezone/date/datalist controls retain native browser popup ownership. Wide-screen SVG is instructional; reduced motion shows a static complete diagram.
+- Share is a video export, not an invitation. Mediabunny runs on demand in the browser: AVC/MP4 where supported, VP9/WebM fallback, explicit unsupported/error states, progress, cancellation, preview and download. Every trip day and activity is included, with long days paginated; the duration is shown before export. Video uses names, dates, activity locations/durations/costs and estimated budget from the authorized loaded trip. No upload, external sending, map tile capture, soundtrack or server rendering is performed.
+- Canonical controls remain Field/AppButton and Base UI AppPopover. `trip/chat/message-composer.tsx` owns both chat entry surfaces; `lib/trips/video.ts` owns film scenes/encoding. Button text/background hover pairs are tested in light and dark themes.
+- Verification: `scripts/shared-workspace-smoke.cjs` covers edit gating, action placement, actual video encode/decode/download, incremental Markdown and existing shared workflows; `scripts/ui-polish-smoke.cjs` covers creation/join, preference-failure retry, contrast, three locales and narrow layouts. These use isolated backend/Google fixtures, not live service credentials. The strict static audit is recorded separately and is not claimed as passed if it times out.
+
 ## Current shared-data contract (2026-09-12)
 
 This section supersedes the older preview-only descriptions below for authenticated routes. Demo routes keep their original in-memory behavior and proposal rules.

@@ -5,9 +5,9 @@ import { UserRound, SlidersHorizontal, ArrowUpRight } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useMvp } from "@/components/mvp/mvp-provider";
 import { AppPopover } from "@/components/ui/app-popover";
+import { ThemeToggle } from "@/components/workspace/theme-toggle";
 export function AccountMenu() {
   const t = useTranslations("mvp");
-  const shared = useTranslations("shared");
   const locale = useLocale();
   const pathname = usePathname();
   const search = useSearchParams().toString();
@@ -44,7 +44,7 @@ export function AccountMenu() {
               </Link>
             ))}
           </nav>
-          <p>{shared("sharedNote")}</p>
+          <ThemeToggle />
           <Link href="/" onClick={close}>
             <ArrowUpRight size={18} aria-hidden="true" />
             {t("home")}

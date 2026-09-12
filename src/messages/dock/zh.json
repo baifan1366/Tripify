@@ -104,5 +104,15 @@
   "presenceViewing": "正在查看",
   "printTrip": "打印 / PDF",
   "darkMode": "深色模式",
-  "lightMode": "浅色模式"
+  "lightMode": "浅色模式",
+  "appearance": "外观",
+  "filmIntro": "将每天的行程、活动和预计费用导出为视频。文件在此设备上生成。",
+  "filmEmpty": "自由探索的一天",
+  "filmSummary": "旅行总览",
+  "filmPreview": "旅行视频预览",
+  "filmLength": "约 {seconds} 秒 · 无声视频",
+  "filmExport": "生成视频",
+  "filmDownload": "下载视频",
+  "filmUnsupported": "此浏览器不支持视频编码，请尝试最新版 Chrome 或 Edge。",
+  "filmFailed": "视频生成失败，请重试。"
 }

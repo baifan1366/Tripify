@@ -5,6 +5,8 @@ import { TripWorkspace } from "../../src/components/trip/workspace/trip-workspac
 import { Provider } from "./shared-provider";
 import "../../src/components/mvp/mvp.css";
 import "../../src/components/app-shell/app-shell.css";
+import { AccountMenu } from "../../src/components/app-shell/account-menu";
+import { ThemeAppearance } from "../../src/components/workspace/theme-toggle";
 const locale = new URLSearchParams(location.search).get("locale") || "en";
 const messages = window.testMessages[locale];
 createRoot(document.getElementById("root")).render(
@@ -15,6 +17,8 @@ createRoot(document.getElementById("root")).render(
           className="mvp-shell app-shell trip-app-theme"
           style={{ gridTemplateColumns: "minmax(0, 1fr)" }}
         >
+          <ThemeAppearance />
+          <AccountMenu />
           <div className="mvp-body">
             <TripWorkspace trip={trip} />
           </div>

@@ -161,5 +161,6 @@
   "routeEstimateTooltip": "Travel times are based on current route estimates and may differ on your travel date.",
   "placeRating": "Rating {rating} / 5",
   "openingHours": "Regular opening hours",
-  "viewInPlanner": "View in Planner"
+  "viewInPlanner": "View in Planner",
+  "invalidInvite": "Enter a valid 64-character invitation code."
 }

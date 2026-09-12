@@ -104,5 +104,15 @@
   "presenceViewing": "Sedang melihat",
   "printTrip": "Cetak / PDF",
   "darkMode": "Mod gelap",
-  "lightMode": "Mod cerah"
+  "lightMode": "Mod cerah",
+  "appearance": "Paparan",
+  "filmIntro": "Eksport setiap hari, aktiviti dan anggaran kos sebagai video. Fail dijana pada peranti ini.",
+  "filmEmpty": "Hari untuk meneroka",
+  "filmSummary": "Gambaran perjalanan anda",
+  "filmPreview": "Pratonton video perjalanan",
+  "filmLength": "Kira-kira {seconds} saat · video tanpa bunyi",
+  "filmExport": "Cipta video",
+  "filmDownload": "Muat turun video",
+  "filmUnsupported": "Pengekodan video tidak tersedia dalam pelayar ini. Cuba Chrome atau Edge terkini.",
+  "filmFailed": "Video tidak dapat dicipta. Sila cuba lagi."
 }

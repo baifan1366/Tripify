@@ -87,5 +87,17 @@
   "aiReduceFailed": "Tripify AI is temporarily unavailable. Your budget is unchanged — try again.",
   "aiStop": "Stop",
   "aiRetry": "Retry",
-  "useAsProposal": "Use as proposal draft"
+  "useAsProposal": "Use as proposal draft",
+  "travelStyle": "Travel style",
+  "travelStylePlaceholder": "Sightseeing, a relaxed escape, food…",
+  "styleSights": "Landmarks and sightseeing",
+  "styleRelax": "A relaxed holiday",
+  "styleFood": "Local food and culture",
+  "styleAdventure": "Nature and outdoor adventures",
+  "createdRetry": "Your trip is created. Retry to finish saving preferences and open it.",
+  "previewTitle": "One workspace for your whole trip",
+  "previewBody": "Plan each day, connect stops on the map, and work through ideas together.",
+  "previewStepPlan": "Arrange your daily activities",
+  "previewStepMap": "Explore places and routes",
+  "previewStepAi": "Ask AI and plan together"
 }

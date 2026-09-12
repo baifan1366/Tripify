@@ -161,5 +161,6 @@
   "routeEstimateTooltip": "Masa perjalanan berdasarkan anggaran laluan semasa dan mungkin berbeza pada tarikh perjalanan anda.",
   "placeRating": "Penilaian {rating} / 5",
   "openingHours": "Waktu operasi biasa",
-  "viewInPlanner": "Lihat dalam Perancang"
+  "viewInPlanner": "Lihat dalam Perancang",
+  "invalidInvite": "Masukkan kod jemputan 64 aksara yang sah."
 }

@@ -161,5 +161,6 @@
   "routeEstimateTooltip": "交通时间基于当前路线估算，可能与旅行日期的实际情况不同。",
   "placeRating": "评分 {rating} / 5",
   "openingHours": "常规营业时间",
-  "viewInPlanner": "在行程中查看"
+  "viewInPlanner": "在行程中查看",
+  "invalidInvite": "请输入有效的 64 位邀请码。"
 }

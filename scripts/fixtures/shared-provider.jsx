@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState } from "react";
 import { database, owner, tripId } from "./shared-backend";
+import { emptyDraft } from "../../src/lib/mvp/model";
 const Context = createContext(null);
 export function Provider({ children }) {
+  const [draft, setDraft] = useState(emptyDraft);
   const [notice, setNotice] = useState("");
   const [trip, setTrip] = useState({
     id: tripId,
@@ -48,6 +50,8 @@ export function Provider({ children }) {
     ],
   });
   const value = {
+    draft,
+    setDraft,
     demo: false,
     viewer: { id: owner, name: "Tan", email: "" },
     trips: [trip],

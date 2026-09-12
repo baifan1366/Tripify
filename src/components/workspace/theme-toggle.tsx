@@ -1,61 +1,71 @@
 "use client";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { Moon, Sun } from "lucide-react";
-
 const THEME_KEY = "tripify-theme";
+let fallback: "light" | "dark" | undefined;
 type Theme = "light" | "dark";
-
 function preferred(): Theme {
   try {
-    const stored = localStorage.getItem(THEME_KEY);
-    if (stored === "light" || stored === "dark") return stored;
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === "light" || saved === "dark") return saved;
   } catch {
-    /* private mode: fall through to system */
+    /* Storage can be disabled in private sessions. */
   }
+  if (fallback) return fallback;
   return typeof window !== "undefined" &&
     window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
     : "light";
 }
-
-const subscribeNoop = () => () => {};
-
-/** Workspace theme toggle. System preference by default, explicit choice
- * persisted afterwards. Google map tiles always stay light. */
-export function ThemeToggle() {
-  const t = useTranslations("dock");
-  const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
-  // Lazy init reads the persisted choice / OS preference during render
-  // (client only; the server snapshot is always light + unmounted).
-  const [theme, setTheme] = useState<Theme>(() =>
-    typeof window === "undefined" ? "light" : preferred(),
-  );
+function subscribe(callback: () => void) {
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  window.addEventListener("storage", callback);
+  window.addEventListener("tripify-theme-change", callback);
+  media.addEventListener("change", callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener("tripify-theme-change", callback);
+    media.removeEventListener("change", callback);
+  };
+}
+function useTheme() {
+  return useSyncExternalStore(subscribe, preferred, () => "light" as const);
+}
+export function ThemeAppearance() {
+  const theme = useTheme();
   useEffect(() => {
-    if (!mounted) return;
     document.documentElement.classList.toggle("dark", theme === "dark");
-    try {
-      localStorage.setItem(THEME_KEY, theme);
-    } catch {
-      /* layout still applies for the session */
-    }
-  }, [theme, mounted]);
-  if (!mounted) return null;
-  const dark = theme === "dark";
+  }, [theme]);
+  return null;
+}
+export function ThemeToggle() {
+  const t = useTranslations("dock"),
+    theme = useTheme();
   return (
-    <button
-      type="button"
-      className="ws-control"
-      aria-pressed={dark}
-      aria-label={t(dark ? "lightMode" : "darkMode")}
-      title={t(dark ? "lightMode" : "darkMode")}
-      onClick={() => setTheme(dark ? "light" : "dark")}
+    <div
+      className="app-theme-choices"
+      role="group"
+      aria-label={t("appearance")}
     >
-      {dark ? (
-        <Sun size={15} aria-hidden="true" />
-      ) : (
-        <Moon size={15} aria-hidden="true" />
-      )}
-    </button>
+      {(["light", "dark"] as const).map((value) => (
+        <button
+          key={value}
+          type="button"
+          aria-pressed={theme === value}
+          onClick={() => {
+            fallback = value;
+            try {
+              localStorage.setItem(THEME_KEY, value);
+            } catch {}
+            document.documentElement.classList.toggle("dark", value === "dark");
+            window.dispatchEvent(new Event("tripify-theme-change"));
+          }}
+        >
+          {value === "light" ? <Sun size={16} /> : <Moon size={16} />}
+          {t(value === "light" ? "lightMode" : "darkMode")}
+        </button>
+      ))}
+    </div>
   );
 }

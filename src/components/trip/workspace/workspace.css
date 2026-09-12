@@ -253,7 +253,10 @@
   cursor: pointer;
   transition:
     background-color var(--app-motion-fast) var(--app-ease-ui),
-    color var(--app-motion-fast) var(--app-ease-ui);
+    color var(--app-motion-fast) var(--app-ease-ui),
+    border-color var(--app-motion-fast) var(--app-ease-ui),
+    box-shadow var(--app-motion-fast) var(--app-ease-ui),
+    transform var(--app-motion-fast) var(--app-ease-ui);
 }
 .dock-workspace button:hover {
   background: var(--surface-hover);

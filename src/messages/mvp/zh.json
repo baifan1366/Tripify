@@ -87,5 +87,17 @@
   "aiReduceFailed": "Tripify AI 暂时不可用，预算数据未受影响，请重试。",
   "aiStop": "停止",
   "aiRetry": "重试",
-  "useAsProposal": "存为提案草稿"
+  "useAsProposal": "存为提案草稿",
+  "travelStyle": "旅行风格",
+  "travelStylePlaceholder": "景点打卡、度假休闲、美食探索……",
+  "styleSights": "景点打卡与观光",
+  "styleRelax": "度假休闲，慢慢体验",
+  "styleFood": "当地美食与文化",
+  "styleAdventure": "自然风光与户外冒险",
+  "createdRetry": "旅行已创建。重试即可完成偏好保存并打开旅行。",
+  "previewTitle": "在一个工作区里规划整趟旅行",
+  "previewBody": "安排每天的活动，在地图上连接目的地，一起讨论和完善计划。",
+  "previewStepPlan": "安排每日活动",
+  "previewStepMap": "探索地点与路线",
+  "previewStepAi": "与 AI 和旅伴一起规划"
 }

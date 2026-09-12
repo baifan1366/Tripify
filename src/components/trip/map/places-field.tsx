@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useMapsLibrary } from "@vis.gl/react-google-maps";
 import { useTranslations } from "next-intl";
 import { useMapsEnabled } from "@/lib/maps/google-map-provider";
@@ -50,6 +50,7 @@ function SearchPlace({
   onSelect: (place: PlaceSelection) => void;
 }) {
   const library = useMapsLibrary("places");
+  const id = useId();
   const host = useRef<HTMLDivElement>(null);
   const callback = useRef(onSelect);
   const [error, setError] = useState(false);
@@ -65,6 +66,8 @@ function SearchPlace({
     if (!host.current) return;
     debugLog("maps", "places widget mounting");
     const widget = new library.PlaceAutocompleteElement();
+    widget.id = id;
+    widget.setAttribute("aria-labelledby", `${id}-label`);
     widget.setAttribute("aria-label", t("searchPlace"));
     let active = true;
     const select = async (
@@ -98,10 +101,13 @@ function SearchPlace({
       widget.removeEventListener("gmp-error", failed);
       widget.remove();
     };
-  }, [library, t]);
+  }, [library, t, id]);
   return (
     <>
-      <div ref={host} />
+      <label id={`${id}-label`} htmlFor={id} className="places-search-label">
+        {t("searchPlace")}
+      </label>
+      <div ref={host} className="places-search-control" />
       {error && <p role="status">{t("placesUnavailable")}</p>}
     </>
   );
