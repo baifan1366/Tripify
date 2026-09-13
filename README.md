@@ -1,8 +1,6 @@
 <div align="center">
 
-# ✈️ Tripify
-
-### *The AI travel teammate that helps groups research, decide, and dynamically replan their trips — together.*
+<img src="docs/diagrams/tripify-title.gif" width="640" alt="The Tripify decision loop — discuss, research, recommend, propose, vote, replan — every pass writes back to one shared versioned trip state">
 
 **by Studify** — Tan Sim Po · She Jia Xuan · Chong Wei Xuan
 
@@ -21,7 +19,7 @@
   <a href="#table-of-contents">📚 Contents</a>
 </p>
 
-<img src="docs/diagrams/decision-loop-animated.svg" width="640" alt="The Tripify decision loop — discuss, research, recommend, propose, vote, replan — every pass writes back to one shared versioned trip state">
+<img src="docs/diagrams/decision-loop-animated.gif" width="640" alt="The Tripify decision loop — discuss, research, recommend, propose, vote, replan — every pass writes back to one shared versioned trip state">
 
 <sub><i>The Tripify decision loop — every pass writes back to one shared, versioned trip state.</i></sub>
 
@@ -112,7 +110,6 @@ Planning group trips is inherently a **group decision-making problem**, not a se
 |:-----|:--------------------------|
 | **AI Group Travel Teammate** ✅ *Chosen* | Addresses the root problem: group travel planning is a decision problem, not a search problem. Combines research, recommendation, and group voting. Strong differentiation from existing tools. |
 | **AI Trip Expense Splitter** ⏸ *Deferred* | Useful but not the core differentiator. Added as a future feature (expense settlement) but not in MVP scope. |
-| **AI Travel Agent with Booking** ❌ *Dropped* | Booking integration adds enormous complexity (payment, API access, compliance) with marginal value for a hackathon. Deferred to post-MVP. |
 | **Social Travel Feed** ❌ *Dropped* | Felt like a generic social media app, not a planning tool. Didn't address the coordination problem. |
 | **AI Photo Journal** ❌ *Dropped* | Interesting but post-trip; didn't solve the planning problem. |
 | **Solo AI Itinerary Generator** ❌ *Dropped* | Already well-served by Google Travel, ChatGPT, and Notion AI. No group decision-making layer. |
@@ -484,7 +481,6 @@ Trip Continues
 
 **What we will NOT build (deferred):**
 
-- ❌ Hotel/flight booking integration
 - ❌ Expense splitting and settlement
 - ❌ TikTok/social media crawling
 - ❌ Offline mode
