@@ -88,6 +88,43 @@ The product follows one central principle:
 
 > **AI proposes. Humans decide.**
 
+
+#### 🧠 Product Mindmap — What Tripify Actually Solves
+
+```mermaid
+mindmap
+  root((Tripify))
+    Group travel stress
+      Information scattered
+      Conflicting preferences
+      No shared decision process
+      Reality changes
+    Shared decision workspace
+      Shared trip state
+      Group preferences
+      AI research
+      Recommendations
+      Proposals + voting
+      Dynamic replanning
+    AI travel teammate
+      Research
+      Plan
+      Critique
+      Explain trade-offs
+      Propose targeted changes
+    Human control
+      AI proposes
+      Humans decide
+      Inspect before/after
+      Approve / modify / reject
+    Outcome
+      One understandable plan
+      Group alignment
+      Safe changes when reality breaks
+```
+
+> *The key idea is not “AI makes a trip”. Tripify turns scattered travel planning into a shared decision process where AI assists and the group remains in control.*
+
 ### Core Capabilities & Current Status
 
 Status is separated deliberately so that prototype behaviour is not presented as a production integration.
@@ -150,6 +187,63 @@ Rule-based AI Observer
    ↓
 Smart Alert / Targeted Replanning
 ```
+
+
+#### 🧠 AI Decision Intelligence Mindmap
+
+```mermaid
+mindmap
+  root((Tripify AI))
+    Context
+      Trip state
+      Member preferences
+      Recent chat
+      Budget
+      Existing itinerary
+    Research
+      Places
+      Reviews
+      Official sources
+      Weather
+      Routes
+      Opening hours
+      Price
+    Recommendation
+      Group Fit
+      Experience
+      Cost
+      Quality
+      Convenience
+      Reliability
+      Risk
+      Best Time
+      Evidence
+    Planning
+      Structured itinerary operations
+      Primary plan
+      Conditional backups
+      Value-for-money reasoning
+    Critic
+      Timing
+      Route feasibility
+      Budget
+      Group fit
+      Evidence
+      Conflicts
+    Decision output
+      Recommendation card
+      Proposal
+      Before / after diff
+      Reasoning
+    Adaptation
+      External reality
+      Rule-based Observer
+      Smart Alert
+      Targeted replanning
+      Partial regeneration
+```
+
+> *This complements the linear pipeline below by showing the AI as a set of connected responsibilities around one shared trip context.*
 
 #### Recommendation Engine — “Is this good for OUR group?”
 
@@ -402,7 +496,7 @@ Trip Continues
 
 | Date | Mentor | Feedback Received | What Was Changed |
 |:-----|:-------|:------------------|:-----------------|
-| 13/9/2026 | Janelle Tan | *"Don't try to build booking integration for the hackathon."* | Removed hotel/flight booking from MVP scope. Focused on research and proposal system instead. |
+| 13/9/2026 | Janelle Tan | The initial landing page may cause information overload because users are presented with multiple panels and features, such as the Journey, Map, trip information, and navigation options at the same time. New users may not immediately know where to begin or which information they should focus on first. | The team will refine the landing page by prioritizing key trip information and reducing unnecessary visual complexity. The Journey and Map sections will remain accessible while secondary information can be progressively introduced. The team will also consider adding a simple user guide or onboarding flow to help first-time users understand the application more easily. |
 
 
 <p align="right"><a href="#table-of-contents">↩ Back to top</a></p>
@@ -487,6 +581,7 @@ Tripify's differentiation is not that it has AI, a map, or group collaboration �
 
 ### Decision-layer Differentiation
 
+
 | Capability | What Tripify Adds |
 |:-----------|:------------------|
 | **Structured Proposals** | AI suggestions become explicit change sets instead of direct silent edits |
@@ -500,6 +595,56 @@ Tripify's differentiation is not that it has AI, a map, or group collaboration �
 | **Conditional Primary + Backup Plans** | Alternatives are attached to specific failure conditions such as rain, crowd, closure, price, timing, or availability |
 | **Rule-based Observer + Smart Alerts** | Relevant trip events can trigger affected-activity checks and prepared alternatives without running AI for every event |
 | **AI + Direct Manipulation** | Users can edit the trip directly from the workspace while AI operates on the same shared state |
+
+
+#### 🧠 Decision-Layer Mindmap
+
+```mermaid
+mindmap
+  root((Decision Layer))
+    Proposal
+      Structured change set
+      Rationale
+      Affected activities
+      Impact metrics
+    Diff
+      Before
+      After
+      Time changes
+      Cost changes
+      Route changes
+    Group decision
+      Vote
+      Approve
+      Modify
+      Reject
+      Explain objections
+    State safety
+      Base trip version
+      Validate before apply
+      Reject stale changes
+      Rebase / regenerate
+    Fine-grained adaptation
+      Partial regeneration
+      Preserve accepted state
+      Activity-level changes
+    Resilience
+      Conditional backups
+      Weather
+      Crowd
+      Traffic
+      Closure
+      Price
+      Availability
+      Transport delay
+    Observation
+      Trip events
+      Rule filter
+      Affected activity check
+      Smart Alert
+```
+
+> *The differentiator is the layer between AI output and database mutation: suggestions become inspectable decisions rather than silent edits.*
 
 <div align="center">
 
@@ -562,6 +707,63 @@ The scalable asset is therefore not “more generated itinerary text”; it is a
 | **Background Jobs** | Upstash QStash | Later asynchronous research, weather checks, replanning, and background observation; synchronous calls remain acceptable for the earliest MVP |
 | **i18n** | next-intl | Locale-aware routing and UI translation for EN / ZH / MS |
 | **Hosting** | Vercel + Supabase Cloud | Minimal deployment overhead for the hackathon prototype |
+
+
+#### 🧠 System Architecture Mindmap
+
+```mermaid
+mindmap
+  root((Tripify System))
+    Frontend
+      Next.js
+      React + TypeScript
+      Tailwind + shadcn/ui
+      Map-first workspace
+      Pinboard panels
+      Chat / itinerary / map / decisions / budget
+    Backend
+      Next.js API Routes
+      Server Actions
+      Auth
+      Trip API
+      Proposal API
+      Vote API
+      AI API
+    Shared state
+      Supabase PostgreSQL
+      Supabase Auth
+      Supabase Realtime
+      Trip version
+      Proposals + votes
+      Activities + preferences
+      Trip events
+    AI workflow
+      OpenRouter
+      LangGraph
+      Researcher
+      Recommendation Engine
+      Planner
+      Critic
+      Observer
+    External tools
+      Google Places
+      Google Routes
+      Open-Meteo
+      Web / official sources
+      Reviews / evidence
+    Async path
+      QStash
+      Vercel Function
+      Background research
+      Weather checks
+      Replanning
+    Output boundary
+      Structured proposal
+      Human decision
+      Backend validation
+      Apply approved operations
+      Increment trip version
+```
 
 ### System Architecture
 <div align="center">
@@ -745,6 +947,50 @@ Proposal preserves unaffected accepted state
 ```
 
 This is the architectural reason Tripify can move away from “regenerate my whole itinerary” toward fine-grained manipulation.
+
+
+#### 🧠 MVP Judging Path Mindmap
+
+```mermaid
+mindmap
+  root((MVP End-to-End Loop))
+    Foundation
+      Shared trip
+      Members
+      Preferences
+      Itinerary state
+      Map workspace
+    Intelligence
+      Research
+      Recommendation Engine
+      Value-for-Money
+      Planner
+      Critic
+    Decision
+      Proposal
+      Diff + rationale
+      Voting
+      Version validation
+      Approved apply
+    Adaptation
+      Weather context
+      Simulated disruption
+      Affected activities
+      Conditional backup
+      Partial replanning
+    Awareness
+      Rule-based Observer
+      Smart Alerts
+      Realtime updates
+    Final demo
+      Group reaches decision
+      Reality changes
+      Targeted proposal
+      Group approves
+      Itinerary updates
+```
+
+> *This is the shortest visual summary of the judging path: build the shared state, make one good AI decision loop work, then prove it can recover when reality changes.*
 
 ### Build Plan & Scope
 
