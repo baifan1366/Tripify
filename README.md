@@ -219,7 +219,7 @@ Trip Continues
 
 <span id="-prototype"></span>
 
-**UI Prototype:** tripify-agent.vercel.app
+**UI Prototype:** <a href="tripify-agent.vercel.app">Tripify</a>
 
 ### Key Screens
 
@@ -444,10 +444,10 @@ Trip Continues
 | | Link |
 |:---|:-----|
 | **Video Presentation** | [Unlisted YouTube Link] *(title: `Studify` — team name only, per brief)* |
-| **Presentation Slides** | [Public Link] *(replace with your share link — e.g. Google Drive / Slides)* |
+| **Presentation Slides** | https://mmuedumy-my.sharepoint.com/:p:/g/personal/chong_wei_xuan_student_mmu_edu_my/IQCuLYKhTi0BTJkZQLaYzpO6AeRSPIPZVedqDUN_KDAEJ6k?e=AqGM69
 
 <details>
-<summary><b>📺 Slide preview — all 13 slides</b></summary>
+<summary><b>📺 Slide preview — all 6 slides</b></summary>
 <br/>
 
 <div align="center">
@@ -457,12 +457,7 @@ Trip Continues
 | ![Slide 1 — Title](docs/pitch/slides/slide-01.png) | ![Slide 2 — The Problem](docs/pitch/slides/slide-02.png) |
 | ![Slide 3 — The Solution](docs/pitch/slides/slide-03.png) | ![Slide 4 — The Twist](docs/pitch/slides/slide-04.png) |
 | ![Slide 5 — The Gap](docs/pitch/slides/slide-05.png) | ![Slide 6 — Demo divider](docs/pitch/slides/slide-06.png) |
-| ![Slide 7 — Dashboard](docs/pitch/slides/slide-07.png) | ![Slide 8 — Recommendation](docs/pitch/slides/slide-08.png) |
-| ![Slide 9 — Proposal & vote](docs/pitch/slides/slide-09.png) | ![Slide 10 — Replanning](docs/pitch/slides/slide-10.png) |
-| ![Slide 11 — Tech stack](docs/pitch/slides/slide-11.png) | ![Slide 12 — Build plan](docs/pitch/slides/slide-12.png) |
-| ![Slide 13 — Impact & close](docs/pitch/slides/slide-13.png) | |
 
-*4:30 video pitch structure: solution & difference → prototype demo → tech stack & build plan → impact & close.*
 
 </div>
 
