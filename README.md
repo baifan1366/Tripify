@@ -222,120 +222,67 @@ Trip Continues
 
 <span id="-prototype"></span>
 
-**UI Prototype:** [Public Link] *(check that it opens in an incognito window)*
+**UI Prototype:** tripify-agent.vercel.app
 
 ### Key Screens
 
-**1. Trip Dashboard — Desktop Layout**
+<div align="center">
 
-```
-+----------------------------------------------------------+
-| Tripify     Tokyo Trip      Oct 20-24     RM4,120/5,000  |
-+--------------+------------------------+------------------+
-|              |                        |                  |
-|  ITINERARY   |         MAP            |   TRIPMATE AI    |
-|              |                        |                  |
-| Day 1        |                        | Chat             |
-| Day 2        |     Route              |                  |
-| Day 3        |     Activities         | Proposal         |
-| Day 4        |                        | Recommendation   |
-| Day 5        |                        |                  |
-|              |                        |                  |
-+--------------+------------------------+------------------+
-| Smart Alert / Pending Decision / Trip Health              |
-+----------------------------------------------------------+
-```
+#### 1. Landing — Your AI Travel Teammate
 
-*Three-panel layout: Itinerary (25%), Map (45%), AI (30%). Designed as a Decision Workspace, not a generic travel dashboard.*
+![Landing](docs/pitch/screens/landing-1.png)
 
-**2. Proposal Card** ⭐ *the core Tripify differentiator*
+*Tripify introduces itself as an AI travel teammate, not just another booking app. The landing page sets the tone: this is a tool for groups who want to research, decide, and replan together. Clear value proposition from the first screen.*
 
-```
-+--------------------------------------+
-| AI Proposal                          |
-|                                      |
-| Make Day 3 Less Tiring               |
-|                                      |
-| Why:                                 |
-| Day 3 currently requires ~11.2 km    |
-| of walking.                          |
-|                                      |
-| Changes:                             |
-| - Move TeamLab to 09:30              |
-| - Remove Shibuya Sky                 |
-| - Add cafe break                     |
-| - Move shopping to 18:00             |
-|                                      |
-| Impact:                              |
-| Walking    11.2 km -> 6.1 km         |
-| Cost       RM 120 -> RM 140          |
-| Group Fit  82 -> 91                  |
-|                                      |
-| Votes:                               |
-| Alice     [Approve]                  |
-| Bob       [Approve]                  |
-| Charlie   [Reject]                   |
-| David     [Approve]                  |
-|                                      |
-| 3 / 4 approve                        |
-|                                      |
-| [Approve] [Modify] [Reject]          |
-+--------------------------------------+
-```
+---
 
-*The proposal card shows rationale, diff, impact, and group decisions in one view.*
+#### 2. Try a Proposal — Vote & Decide ⭐
 
-**3. AI Recommendation Card**
+![Try a Proposal](docs/pitch/screens/try-a-proposal.png)
 
-```
-+--------------------------------------+
-| TeamLab Borderless                   |
-|                                      |
-| AI Recommendation: 91 / 100         |
-|                                      |
-| Group Fit       94                   |
-| Experience      92                   |
-| Cost            78                   |
-| Convenience     90                   |
-| Reliability     91                   |
-|                                      |
-| Why we recommend it:                 |
-| [check] 4/4 members interested       |
-| [check] Indoor (good for rain)       |
-| [check] Easy transportation          |
-| [check] Strong recent reviews        |
-|                                      |
-| Potential issues:                    |
-| [warn] Crowded after 14:00           |
-|                                      |
-| Best time: 09:00 - 11:30             |
-|                                      |
-| Backup: Tokyo National Museum        |
-+--------------------------------------+
-```
+*The proposal system is Tripify's core differentiator. When the AI suggests changes to the itinerary, it creates a structured proposal with clear rationale, visual before/after diffs, and quantified impact metrics. Each group member can vote to approve, modify, or reject. This transforms travel planning from "one person decides everything" to true group decision-making. Approved proposals are applied atomically with full version control, so the AI never works off stale data.*
 
-*Recommendation scores incorporate group preferences, not just generic popularity.*
+---
 
-**4. Mobile Layout**
+#### 3. Trade-offs Analysis — Transparent Decision Intelligence
 
-```
-+------------------------+
-| Tokyo Trip              |
-| RM4,120 / RM5,000       |
-+------------------------+
-| Day 3                   |
-|                        |
-| 09:30 TeamLab           |
-| 12:30 Lunch             |
-| 14:00 Cafe              |
-| 16:00 Shopping          |
-|                        |
-+------------------------+
-| Plan  Map  Chat  ...    |
-+------------------------+
-```
+![Trade-offs](docs/pitch/screens/trade-offs.png)
 
-*Mobile layout uses bottom navigation and simplified views, not a compressed desktop layout.*
+*No group agrees on everything. Tripify's AI analyzes trade-offs across multiple dimensions — cost, walking distance, group fit score, and experience quality — and presents them transparently. This screen shows the AI reasoning about why TeamLab Borderless might be a better choice than Shibuya Sky for THIS group, based on their stated preferences (indoor activities, moderate walking, cultural experiences). The radar chart and impact breakdown help groups make informed decisions based on what matters most to them, not generic popularity rankings.*
+
+---
+
+#### 4. Sign Up — Simple Onboarding
+
+![Sign Up](docs/pitch/screens/sign-up.png)
+
+*Authentication is handled by Supabase Auth with a clean, accessible interface. Email/password and social login options make onboarding friction-free. Protected routes ensure that only authenticated users can create trips or join groups.*
+
+---
+
+#### 5. Home — Your Trip Dashboard
+
+![Home](docs/pitch/screens/home.png)
+
+*After logging in, users land on their trip dashboard. This is the central hub where you can see all your trips — active, upcoming, and past. Create a new trip, accept pending invitations, or jump back into an ongoing trip. The home screen shows trip status at a glance: budget progress, dates, member count, and whether there are pending decisions or proposals awaiting your vote. It's designed for quick access and clear status visibility, not information overload.*
+
+---
+
+#### 6. Create a Trip — Set the Foundation
+
+![Create a Trip](docs/pitch/screens/create-a-trip.png)
+
+*Trip creation captures the essential parameters: destination, dates, budget, and currency. This isn't just form fields — it's the foundation for every AI decision that follows. Budget constraints inform cost optimization; dates affect seasonality and weather checks; currency ensures accurate financial tracking across international trips. After creation, the trip owner invites members, and each member sets their individual preferences (interests, dislikes, walking tolerance, pace).*
+
+---
+
+#### 7. Plan Your Trip — The Decision Workspace
+
+![Plan Trip](docs/pitch/screens/plan-trip.png)
+
+*This is where groups spend most of their time. The three-panel layout combines itinerary timeline (left), interactive Google Maps with routes (center), and AI chat with proposal panel (right). Unlike traditional travel apps where planning is scattered across multiple tools, everything happens in one workspace. The AI participates in the group chat, researches destinations using Google Places and web search, calculates travel times between activities, and proposes schedule optimizations based on real group preferences. When a flight delay or weather change invalidates the plan, the AI detects the problem, researches alternatives, and creates a backup proposal — all within the same interface. This is a decision workspace, not a generic dashboard.*
+
+</div>
 
 <p align="right"><a href="#table-of-contents">↩ Back to top</a></p>
 
