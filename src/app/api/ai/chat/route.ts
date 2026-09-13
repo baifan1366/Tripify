@@ -19,7 +19,7 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 // Streaming AI replies need room beyond the default function limit.
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 function jsonError(code: string, message: string, status: number) {
   return Response.json({ error: code, message }, { status });
