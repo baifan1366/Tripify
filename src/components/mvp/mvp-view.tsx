@@ -26,6 +26,8 @@ import { AppButton, Field, SectionHeading, EmptyState } from "./primitives";
 import { TripWorkspace } from "@/components/trip/workspace/trip-workspace";
 import { createSharedTrip, sharedError } from "@/lib/trips/repository";
 import { AcceptInvite } from "@/components/trip/people/shared-people";
+import { saveMemberPreferences } from "@/lib/trips/proposals";
+import { WorkspacePreview } from "./workspace-preview";
 
 export function MvpView({ path }: { path: string[] }) {
   const t = useTranslations("mvp");
@@ -258,6 +260,10 @@ function CreateTrip() {
   const { draft, setDraft, setNotice, viewer, base, refreshTrips } = useMvp();
   const [pending, setPending] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [createdId, setCreatedId] = useState<string | null>(null);
+  const timezones = Array.from(
+    new Set([draft.timezone, "UTC", ...Intl.supportedValuesOf("timeZone")]),
+  ).sort();
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const update = (key: keyof TripDraft, value: string) => {
@@ -294,10 +300,15 @@ function CreateTrip() {
     setPending(true);
     setSaveError("");
     try {
-      const id = await createSharedTrip(draft, viewer.name);
+      const id = createdId ?? (await createSharedTrip(draft, viewer.name));
+      setCreatedId(id);
+      if (draft.travelStyle?.trim())
+        await saveMemberPreferences(id, {
+          interests: draft.travelStyle.trim(),
+        });
+      await refreshTrips();
       setDraft(emptyDraft);
       setNotice(shared("saved"));
-      await refreshTrips();
       router.push(`${base}/trips/${id}`);
     } catch (e) {
       setSaveError(shared(sharedError(e)));
@@ -313,93 +324,132 @@ function CreateTrip() {
       </Link>
       <SectionHeading eyebrow={t("draft")} title={t("create")} />
       <p className="mvp-lead">{t("createIntro")}</p>
-      <form className="mvp-card mvp-create-form" noValidate onSubmit={submit}>
-        <Field
-          label={t("name")}
-          name="name"
-          value={draft.name}
-          onChange={(e) => update("name", e.target.value)}
-          maxLength={100}
-          error={errors.name}
-          required
-        />
-        <Field
-          label={t("destination")}
-          name="destination"
-          value={draft.destination}
-          onChange={(e) => update("destination", e.target.value)}
-          maxLength={120}
-          error={errors.destination}
-          required
-        />
-        <div className="mvp-form-row">
-          <Field
-            label={t("start")}
-            name="start"
-            type="date"
-            value={draft.start}
-            onChange={(e) => update("start", e.target.value)}
-            error={errors.start}
-            required
-          />
-          <Field
-            label={t("end")}
-            name="end"
-            type="date"
-            value={draft.end}
-            min={draft.start || undefined}
-            onChange={(e) => update("end", e.target.value)}
-            error={errors.end}
-            required
-          />
-        </div>
-        <p className="mvp-hint">{t("dateHint")}</p>
-        <div className="mvp-form-row">
-          <div className="mvp-field">
-            <label htmlFor="trip-currency">{t("currency")}</label>
-            <select
-              id="trip-currency"
-              value={draft.currency}
-              onChange={(e) => update("currency", e.target.value)}
-            >
-              {["MYR", "USD", "JPY", "CNY", "SGD", "EUR"].map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
+      <div className="trip-create-layout">
+        <form className="mvp-card mvp-create-form" noValidate onSubmit={submit}>
+          <fieldset
+            disabled={pending || !!createdId}
+            className="trip-create-fields"
+          >
+            <Field
+              label={t("name")}
+              name="name"
+              value={draft.name}
+              onChange={(e) => update("name", e.target.value)}
+              maxLength={100}
+              error={errors.name}
+              required
+            />
+            <Field
+              label={t("destination")}
+              name="destination"
+              value={draft.destination}
+              onChange={(e) => update("destination", e.target.value)}
+              maxLength={120}
+              error={errors.destination}
+              required
+            />
+            <div className="mvp-form-row">
+              <Field
+                label={t("start")}
+                name="start"
+                type="date"
+                value={draft.start}
+                onChange={(e) => update("start", e.target.value)}
+                error={errors.start}
+                required
+              />
+              <Field
+                label={t("end")}
+                name="end"
+                type="date"
+                value={draft.end}
+                min={draft.start || undefined}
+                onChange={(e) => update("end", e.target.value)}
+                error={errors.end}
+                required
+              />
+            </div>
+            <div className="mvp-form-row">
+              <div className="mvp-field">
+                <label htmlFor="trip-currency">{t("currency")}</label>
+                <select
+                  id="trip-currency"
+                  value={draft.currency}
+                  onChange={(e) => update("currency", e.target.value)}
+                >
+                  {["MYR", "USD", "JPY", "CNY", "SGD", "EUR"].map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <Field
+                label={t("budget")}
+                name="budget"
+                type="number"
+                min="0"
+                step="0.01"
+                value={draft.budget}
+                onChange={(e) => update("budget", e.target.value)}
+                error={errors.budget}
+                required
+              />
+            </div>
+            <div className="mvp-field">
+              <label htmlFor="trip-timezone">{t("timezone")}</label>
+              <select
+                id="trip-timezone"
+                name="timezone"
+                value={draft.timezone}
+                onChange={(e) => update("timezone", e.target.value)}
+                aria-invalid={!!errors.timezone}
+                aria-describedby={
+                  errors.timezone ? "timezone-error" : undefined
+                }
+              >
+                {timezones.map((zone) => (
+                  <option key={zone} value={zone}>
+                    {zone.replaceAll("_", " ")}
+                  </option>
+                ))}
+              </select>
+              {errors.timezone && (
+                <small id="timezone-error" role="alert">
+                  {errors.timezone}
+                </small>
+              )}
+            </div>
+            <Field
+              label={t("travelStyle")}
+              name="travelStyle"
+              value={draft.travelStyle ?? ""}
+              onChange={(e) => update("travelStyle", e.target.value)}
+              maxLength={400}
+              placeholder={t("travelStylePlaceholder")}
+              list="travel-styles"
+            />
+            <datalist id="travel-styles">
+              {["styleSights", "styleRelax", "styleFood", "styleAdventure"].map(
+                (key) => (
+                  <option key={key} value={t(key)} />
+                ),
+              )}
+            </datalist>
+          </fieldset>
+          {saveError && <p role="alert">{saveError}</p>}
+          {createdId && saveError && <p role="status">{t("createdRetry")}</p>}
+          <div className="mvp-form-actions">
+            <AppButton type="submit" disabled={pending}>
+              <Plus size={16} />
+              {pending
+                ? shared("pending")
+                : createdId
+                  ? shared("retry")
+                  : shared("create")}
+            </AppButton>
           </div>
-          <Field
-            label={t("budget")}
-            name="budget"
-            type="number"
-            min="0"
-            step="0.01"
-            value={draft.budget}
-            onChange={(e) => update("budget", e.target.value)}
-            error={errors.budget}
-            required
-          />
-        </div>
-        <Field
-          label={t("timezone")}
-          name="timezone"
-          value={draft.timezone}
-          onChange={(e) => update("timezone", e.target.value)}
-          error={errors.timezone}
-          hint="Asia/Tokyo · Asia/Kuala_Lumpur · Europe/Paris"
-          required
-        />
-        <p className="mvp-hint">{shared("sharedNote")}</p>
-        {saveError && <p role="alert">{saveError}</p>}
-        <div className="mvp-form-actions">
-          <Link className="mvp-inline-link" href={base}>
-            {t("cancel")}
-          </Link>
-          <AppButton type="submit" disabled={pending}>
-            <Plus size={16} />
-            {pending ? shared("pending") : shared("create")}
-          </AppButton>
-        </div>
-      </form>
+        </form>
+        <WorkspacePreview />
+      </div>
     </main>
   );
 }

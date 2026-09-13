@@ -12,17 +12,23 @@ export function AppPopover({
   className,
   children,
   side = "bottom",
+  onOpenChange,
 }: {
   trigger: ReactNode;
   label: string;
   className?: string;
   side?: "bottom" | "right";
+  onOpenChange?: (open: boolean) => void;
   children: ReactNode | ((close: () => void) => ReactNode);
 }) {
   const [open, setOpen] = useState(false);
   const t = useTranslations("mvp");
+  const changeOpen = (next: boolean) => {
+    setOpen(next);
+    onOpenChange?.(next);
+  };
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
+    <Popover.Root open={open} onOpenChange={changeOpen}>
       <Popover.Trigger className={className} aria-label={label}>
         {trigger}
       </Popover.Trigger>
@@ -42,7 +48,7 @@ export function AppPopover({
               </Popover.Close>
             </div>
             {typeof children === "function"
-              ? children(() => setOpen(false))
+              ? children(() => changeOpen(false))
               : children}
           </Popover.Popup>
         </Popover.Positioner>

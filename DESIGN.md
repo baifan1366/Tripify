@@ -121,3 +121,16 @@ The narrative homepage is implemented in `journey-landing.tsx` and `journey.css`
 - **Do:** Make “AI proposes. Humans decide.” visible in every major story.
 - **Don't:** Treat AI as a silent itinerary editor.
 - **Don't:** Substitute travel imagery for evidence or present a city photograph as the actual recommended attraction.
+
+### Itinerary map workspace (2026-09-12)
+
+The map is an itinerary canvas inside the existing resizable widget. The signature is a numbered stop with a compact travel-ticket detail above it; adjacent route labels repeat the Planner's actual travel times. The toolbar is one compact row, discovery floats over the canvas, and Transit/Risk remain independent overlays. Container queries reduce secondary labels at 620px and 360px widget widths. Existing Field, AppButton, AppPopover and AppTooltip remain canonical; the placement sheet uses the installed Base UI Dialog for focus trapping, Escape and a portaled, bounded form.
+
+Runtime mapping: `src/components/trip/map/map-workspace.css` scopes the brief's `--map-route` #2F7DF4, `--map-ink` #0B1F33 and `--map-muted` #6B7F93 to itinerary graphics. Google Polyline options mirror route/neutral values because the SDK requires concrete colors. Form/action surfaces continue consuming the canonical App `--primary`, `--card`, `--foreground`, `--muted-foreground`, and `--border` tokens from globals.css. Small white action text retains the existing darker accessible action blue. No font or marketing palette changes.
+# Workspace interaction refinement — 2026-09-13
+
+The existing blue/neutral visual direction remains canonical. Widget headings have a 16px reading inset; grip and resize handles appear only while editing layout. Journey actions sit beside the selected stop at every density, stacking within the right action column on narrow widgets. Invite codes use the canonical portaled AppPopover, avoiding clipping in small People panels.
+
+AI and group chat share `trip/chat/message-composer.tsx`: an autogrowing, rounded composer with an integrated send/stop action, shared focus ring, IME-safe Enter to send and Shift+Enter for a new line. AI responses render incremental GFM Markdown. Primary/outline hover colors are explicit in both themes; button press and popover entrance use short transitions, with reduced-motion overrides.
+
+Create trip uses a natural-height form and a wide-screen animated SVG workspace guide. Currency/timezone selects, date inputs and travel-style suggestions use browser-owned native popups; OS popup geometry is accepted. Travel style allows free text rather than requiring one preset. AccountMenu owns the light/dark choice across dashboard and workspace. Header Share now exports a locally generated, silent trip video using Mediabunny; inviting remains in People.

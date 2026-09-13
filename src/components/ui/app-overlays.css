@@ -3,6 +3,10 @@
   font-family: var(--trip-font-sans);
 }
 .app-popover {
+  transform-origin: var(--transform-origin);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
   width: min(320px, calc(100vw - 24px));
   max-height: var(--available-height);
   overflow: auto;
@@ -14,6 +18,10 @@
   box-shadow: 0 12px 32px color-mix(in srgb, var(--foreground) 12%, transparent);
   font-size: 14px;
   line-height: 1.5;
+}
+.app-popover:is([data-starting-style], [data-ending-style]) {
+  opacity: 0;
+  transform: translateY(4px) scale(0.98);
 }
 .app-popover-heading {
   display: flex;
@@ -48,7 +56,9 @@
   cursor: pointer;
   transition:
     background-color var(--app-motion-fast) var(--app-ease-ui),
-    color var(--app-motion-fast) var(--app-ease-ui);
+    color var(--app-motion-fast) var(--app-ease-ui),
+    border-color var(--app-motion-fast) var(--app-ease-ui),
+    transform var(--app-motion-fast) var(--app-ease-ui);
 }
 .app-popover :is(a, button):hover {
   background: var(--surface-hover);
@@ -92,6 +102,9 @@
   line-height: 1.5;
 }
 @media (prefers-reduced-motion: reduce) {
+  .app-popover {
+    transition: none;
+  }
   .app-popover :is(a, button) {
     transition: none;
   }

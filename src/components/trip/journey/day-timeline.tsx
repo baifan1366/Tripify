@@ -13,6 +13,7 @@ import {
 import { PlacesField } from "../map/places-field";
 import type { PlaceSelection } from "@/lib/maps/types";
 import type { RouteSegment } from "@/lib/maps/types";
+import { activityEnd, segmentTiming, clockTime } from "@/lib/maps/schedule";
 export const DayTimeline = memo(function DayTimeline({
   trip,
   day,
@@ -40,7 +41,9 @@ export const DayTimeline = memo(function DayTimeline({
     root.current?.querySelector('[aria-pressed="true"]')?.scrollIntoView({
       block: "nearest",
       inline: "nearest",
-      behavior: "instant",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
     });
   }, [selected]);
   const { setNotice, viewer, refreshTrips } = useMvp();
@@ -131,139 +134,158 @@ export const DayTimeline = memo(function DayTimeline({
       {items.map((item, i) => {
         const isSelected = selected === item.id;
         return (
-        <div
-          key={item.id}
-          className="mvp-timeline-stop"
-          data-selected={isSelected}
-          data-context={isSelected ? "active" : undefined}
-        >
-          <div className="mvp-timeline-dot" aria-hidden="true">{i + 1}</div>
-          <button
-            type="button"
-            className="mvp-activity-card"
-            aria-pressed={isSelected}
-            onClick={() => onSelect(item.id)}
-            data-hovered={hovered === item.id}
-            onMouseEnter={() => onHover(item.id)}
-            onMouseLeave={() => onHover(null)}
-            onFocus={() => onHover(item.id)}
-            onBlur={() => onHover(null)}
+          <div
+            key={item.id}
+            className="mvp-timeline-stop"
+            data-selected={isSelected}
+            data-context={isSelected ? "active" : undefined}
           >
-            <span className="mvp-activity-time">{item.time}</span>
-            <strong>{item.title}</strong>
-            <small>
-              <MapPin size={13} aria-hidden="true" />
-              {item.place}
-            </small>
-            <span className="mvp-activity-meta">
-              <Clock3 size={12} aria-hidden="true" />
-              {t("minutes", { count: item.duration })} · {money(item.cost)}
-            </span>
-          </button>
-          {canEdit && isSelected && (
-            <div className="journey-edit-actions" data-reveal="hover">
-              <AppButton
-                variant="outline"
-                className="journey-quiet-btn"
-                disabled={pending}
-                onClick={() => {
-                  setEditing(item);
-                  setEditVersion(trip.version);
-                  setLocation(item.place);
-                  setPlace(
-                    item.placeId &&
-                      item.latitude !== undefined &&
-                      item.longitude !== undefined
-                      ? {
-                          placeId: item.placeId,
-                          name: item.place,
-                          latitude: item.latitude,
-                          longitude: item.longitude,
-                        }
-                      : null,
-                  );
-                  setAdding(true);
-                  setConflict(false);
-                  setSaveError("");
-                  setRemoving(null);
-                }}
-              >
-                {shared("editActivity")}
-              </AppButton>
-              {removing === item.id ? (
-                <>
-                  <span className="journey-confirm">
-                    {shared("confirmActivityRemove", { title: item.title })}
-                  </span>
-                  <AppButton
-                    variant="outline"
-                    className="journey-quiet-btn"
-                    disabled={pending}
-                    onClick={() => setRemoving(null)}
-                  >
-                    {shared("cancel")}
-                  </AppButton>
-                  <AppButton
-                    className="journey-quiet-btn"
-                    disabled={pending || conflict}
-                    onClick={async () => {
-                      setPending(true);
-                      setSaveError("");
-                      try {
-                        await mutateSharedTrip(
-                          { ...trip, version: editVersion },
-                          "activity.remove",
-                          item.id,
-                          {},
-                        );
-                        setRemoving(null);
-                        await refreshTrips();
-                      } catch (e) {
-                        setSaveError(shared(sharedError(e)));
-                        if (sharedError(e) === "conflict") {
-                          setConflict(true);
-                          await refreshTrips().catch(() => {});
-                        }
-                      } finally {
-                        setPending(false);
-                      }
-                    }}
-                  >
-                    {shared("remove")}
-                  </AppButton>
-                </>
-              ) : (
+            <div className="mvp-timeline-dot" aria-hidden="true">
+              {i + 1}
+            </div>
+            <button
+              type="button"
+              className="mvp-activity-card"
+              aria-pressed={isSelected}
+              onClick={() => onSelect(item.id)}
+              data-hovered={hovered === item.id}
+              onMouseEnter={() => onHover(item.id)}
+              onMouseLeave={() => onHover(null)}
+              onFocus={() => onHover(item.id)}
+              onBlur={() => onHover(null)}
+            >
+              <span className="mvp-activity-time">
+                {item.time} — {activityEnd(item)}
+              </span>
+              <strong>{item.title}</strong>
+              <small>
+                <MapPin size={13} aria-hidden="true" />
+                {item.place}
+              </small>
+              <span className="mvp-activity-meta">
+                <Clock3 size={12} aria-hidden="true" />
+                {t("minutes", { count: item.duration })} · {money(item.cost)}
+              </span>
+            </button>
+            {canEdit && isSelected && (
+              <div className="journey-edit-actions" data-reveal="hover">
                 <AppButton
                   variant="outline"
                   className="journey-quiet-btn"
                   disabled={pending}
                   onClick={() => {
-                    setRemoving(item.id);
+                    setEditing(item);
                     setEditVersion(trip.version);
+                    setLocation(item.place);
+                    setPlace(
+                      item.latitude !== undefined &&
+                        item.longitude !== undefined
+                        ? {
+                            placeId: item.placeId ?? "",
+                            name: item.place,
+                            latitude: item.latitude,
+                            longitude: item.longitude,
+                          }
+                        : null,
+                    );
+                    setAdding(true);
                     setConflict(false);
+                    setSaveError("");
+                    setRemoving(null);
                   }}
                 >
-                  {shared("remove")}
+                  {shared("editActivity")}
                 </AppButton>
-              )}
-            </div>
-          )}
-          {i < items.length - 1 && (
-            <div className="journey-segment">
-              <Route size={14} aria-hidden="true" />
-              <span>
-                {(() => {
-                  const segment = routes.find(
-                    (r) => r.from === item.id && r.to === items[i + 1].id,
-                  );
-                  return segment
-                    ? `${shared(segment.mode)} · ${t("minutes", { count: Math.ceil(segment.seconds / 60) })} · ${new Intl.NumberFormat(locale, { style: "unit", unit: "kilometer", maximumFractionDigits: 1 }).format(segment.meters / 1000)}`
-                    : w("transportPending");
-                })()}
-              </span>
-            </div>
-          )}
-        </div>
+                {removing === item.id ? (
+                  <>
+                    <span className="journey-confirm">
+                      {shared("confirmActivityRemove", { title: item.title })}
+                    </span>
+                    <AppButton
+                      variant="outline"
+                      className="journey-quiet-btn"
+                      disabled={pending}
+                      onClick={() => setRemoving(null)}
+                    >
+                      {shared("cancel")}
+                    </AppButton>
+                    <AppButton
+                      className="journey-quiet-btn"
+                      disabled={pending || conflict}
+                      onClick={async () => {
+                        setPending(true);
+                        setSaveError("");
+                        try {
+                          await mutateSharedTrip(
+                            { ...trip, version: editVersion },
+                            "activity.remove",
+                            item.id,
+                            {},
+                          );
+                          setRemoving(null);
+                          await refreshTrips();
+                        } catch (e) {
+                          setSaveError(shared(sharedError(e)));
+                          if (sharedError(e) === "conflict") {
+                            setConflict(true);
+                            await refreshTrips().catch(() => {});
+                          }
+                        } finally {
+                          setPending(false);
+                        }
+                      }}
+                    >
+                      {shared("remove")}
+                    </AppButton>
+                  </>
+                ) : (
+                  <AppButton
+                    variant="outline"
+                    className="journey-quiet-btn"
+                    disabled={pending}
+                    onClick={() => {
+                      setRemoving(item.id);
+                      setEditVersion(trip.version);
+                      setConflict(false);
+                    }}
+                  >
+                    {shared("remove")}
+                  </AppButton>
+                )}
+              </div>
+            )}
+            {i < items.length - 1 && (
+              <div className="journey-segment">
+                <Route size={14} aria-hidden="true" />
+                <span>
+                  {(() => {
+                    const segment = routes.find(
+                      (r) => r.from === item.id && r.to === items[i + 1].id,
+                    );
+                    const timing = segmentTiming(item, items[i + 1], segment);
+                    return (
+                      <>
+                        {segment
+                          ? `${shared(segment.mode)} · ${t("minutes", { count: Math.ceil(segment.seconds / 60) })} · ${new Intl.NumberFormat(locale, { style: "unit", unit: "kilometer", maximumFractionDigits: 1 }).format(segment.meters / 1000)}`
+                          : shared("travelUnverified")}
+                        {timing.conflict > 0 && (
+                          <small className="map-timing-warning">
+                            {shared("scheduleConflict", {
+                              minutes: timing.conflict,
+                            })}{" "}
+                            ·{" "}
+                            {shared("earliestArrival", {
+                              time: clockTime(timing.arrival),
+                            })}
+                          </small>
+                        )}
+                      </>
+                    );
+                  })()}
+                </span>
+              </div>
+            )}
+          </div>
         );
       })}
       {!items.length && (
@@ -279,7 +301,11 @@ export const DayTimeline = memo(function DayTimeline({
             noValidate
             onSubmit={submit}
           >
-            {editing && <p>{editing.title} · {t("day", { day: editing.day })}</p>}
+            {editing && (
+              <p>
+                {editing.title} · {t("day", { day: editing.day })}
+              </p>
+            )}
             <Field
               label={t("activity")}
               name="title"

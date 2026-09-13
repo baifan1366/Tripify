@@ -115,6 +115,7 @@ export function WidgetFrame({
       id={`dock-${id}`}
       className="ws-widget dock-panel"
       data-widget={id}
+      data-editing={grid.editing}
       data-state="open"
       data-density={density}
       data-focused={focused}
@@ -183,46 +184,119 @@ export function WidgetFrame({
           >
             {(close) => (
               <div className="dock-picker" role="group" aria-label={title}>
-                <button type="button" onClick={() => { grid.nudge(id, -1, 0); close(); refocusMenu(); }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    grid.nudge(id, -1, 0);
+                    close();
+                    refocusMenu();
+                  }}
+                >
                   <ArrowLeft size={15} aria-hidden="true" />
                   {t("moveLeft")}
                 </button>
-                <button type="button" onClick={() => { grid.nudge(id, 1, 0); close(); refocusMenu(); }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    grid.nudge(id, 1, 0);
+                    close();
+                    refocusMenu();
+                  }}
+                >
                   <ArrowRight size={15} aria-hidden="true" />
                   {t("moveRight")}
                 </button>
-                <button type="button" onClick={() => { grid.nudge(id, 0, -1); close(); refocusMenu(); }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    grid.nudge(id, 0, -1);
+                    close();
+                    refocusMenu();
+                  }}
+                >
                   <ArrowUp size={15} aria-hidden="true" />
                   {t("moveUp")}
                 </button>
-                <button type="button" onClick={() => { grid.nudge(id, 0, 1); close(); refocusMenu(); }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    grid.nudge(id, 0, 1);
+                    close();
+                    refocusMenu();
+                  }}
+                >
                   <ArrowDown size={15} aria-hidden="true" />
                   {t("moveDown")}
                 </button>
-                <button type="button" onClick={() => { grid.grow(id, 1, 0); close(); refocusMenu(); }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    grid.grow(id, 1, 0);
+                    close();
+                    refocusMenu();
+                  }}
+                >
                   <Maximize2 size={15} aria-hidden="true" />
                   {t("makeWider")}
                 </button>
-                <button type="button" onClick={() => { grid.grow(id, -1, 0); close(); refocusMenu(); }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    grid.grow(id, -1, 0);
+                    close();
+                    refocusMenu();
+                  }}
+                >
                   <Minimize2 size={15} aria-hidden="true" />
                   {t("makeNarrower")}
                 </button>
-                <button type="button" onClick={() => { grid.grow(id, 0, 1); close(); refocusMenu(); }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    grid.grow(id, 0, 1);
+                    close();
+                    refocusMenu();
+                  }}
+                >
                   <ArrowDown size={15} aria-hidden="true" />
                   {t("makeTaller")}
                 </button>
-                <button type="button" onClick={() => { grid.grow(id, 0, -1); close(); refocusMenu(); }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    grid.grow(id, 0, -1);
+                    close();
+                    refocusMenu();
+                  }}
+                >
                   <ArrowUp size={15} aria-hidden="true" />
                   {t("makeShorter")}
                 </button>
                 {def.focusable && (
-                  <button type="button" onClick={() => { grid.setFocus(focused ? null : id); close(); }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      grid.setFocus(focused ? null : id);
+                      close();
+                    }}
+                  >
                     <Expand size={15} aria-hidden="true" />
                     {focused ? t("closeFocus") : t("focusWidget")}
                   </button>
                 )}
-                <button type="button" onClick={() => { grid.togglePin(id); close(); refocusMenu(); }}>
-                  {pinned ? <PinOff size={15} aria-hidden="true" /> : <Pin size={15} aria-hidden="true" />}
+                <button
+                  type="button"
+                  onClick={() => {
+                    grid.togglePin(id);
+                    close();
+                    refocusMenu();
+                  }}
+                >
+                  {pinned ? (
+                    <PinOff size={15} aria-hidden="true" />
+                  ) : (
+                    <Pin size={15} aria-hidden="true" />
+                  )}
                   {pinned ? t("unpinWidget") : t("pinWidget")}
                 </button>
                 {def.hidable && (

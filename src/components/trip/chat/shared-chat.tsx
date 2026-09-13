@@ -1,7 +1,7 @@
 "use client";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Send } from "lucide-react";
+import { MessageComposer } from "./message-composer";
 import { createClient } from "@/lib/supabase/client";
 import type { Trip } from "@/lib/mvp/model";
 import { useMvp } from "@/components/mvp/mvp-provider";
@@ -110,40 +110,21 @@ function ChatComposer({
 }) {
   const m = useTranslations("mvp");
   const [draft, setDraft] = usePersistentDraft(tripId, "chat");
-  const composing = useRef(false);
   return (
-    <form
-      className="mvp-composer"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (composing.current || !draft.trim()) return;
+    <MessageComposer
+      value={draft}
+      onChange={setDraft}
+      label={m("message")}
+      sendLabel={m("send")}
+      context={m("chat")}
+      maxLength={2000}
+      onSend={() => {
         const content = draft.trim();
+        if (!content) return;
         setDraft("");
         onSend(content);
       }}
-    >
-      <label htmlFor={`shared-message-${tripId}`}>{m("message")}</label>
-      <textarea
-        id={`shared-message-${tripId}`}
-        rows={3}
-        maxLength={2000}
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onCompositionStart={() => {
-          composing.current = true;
-        }}
-        onCompositionEnd={() => {
-          composing.current = false;
-        }}
-      />
-      <AppButton
-        type="submit"
-        disabled={!draft.trim()}
-        aria-label={m("send")}
-      >
-        <Send size={16} />
-      </AppButton>
-    </form>
+    />
   );
 }
 

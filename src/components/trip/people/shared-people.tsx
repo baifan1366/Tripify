@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { sharedError } from "@/lib/trips/repository";
@@ -7,6 +7,8 @@ import { saveMemberPreferences } from "@/lib/trips/proposals";
 import type { Member, Trip } from "@/lib/mvp/model";
 import { useMvp } from "@/components/mvp/mvp-provider";
 import { AppButton, Field } from "@/components/mvp/primitives";
+import { AppPopover } from "@/components/ui/app-popover";
+import { UsersRound } from "lucide-react";
 
 export function SharedPeople({ trip }: { trip: Trip }) {
   const t = useTranslations("shared");
@@ -75,15 +77,49 @@ export function SharedPeople({ trip }: { trip: Trip }) {
           </button>
         ))}
         {viewer.id === trip.createdBy && (
-          <span className="people-invite-row">
-            <AppButton
-              variant="outline"
-              disabled={pending}
-              onClick={() => void invite()}
-            >
-              {t("invite")}
-            </AppButton>
-          </span>
+          <AppPopover
+            label={t("invite")}
+            className="mvp-button people-invite-trigger"
+            trigger={<>{t("invite")}</>}
+            onOpenChange={(open) => {
+              if (open && !token && !pending) void invite();
+            }}
+          >
+            <div className="people-invite-popover">
+              {" "}
+              {token && (
+                <div className="shared-invite">
+                  <Field
+                    label={t("code")}
+                    value={token}
+                    readOnly
+                    onFocus={(e) => e.target.select()}
+                    hint={t("inviteHint")}
+                  />
+                  <AppButton
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(token);
+                        setNotice(t("copied"));
+                      } catch {
+                        setError(t("failed"));
+                      }
+                    }}
+                  >
+                    {t("copy")}
+                  </AppButton>
+                </div>
+              )}
+              {pending && <p role="status">{t("pending")}</p>}
+              {error && <p role="alert">{error}</p>}
+              {!token && !pending && (
+                <AppButton variant="outline" onClick={() => void invite()}>
+                  {t("retry")}
+                </AppButton>
+              )}
+            </div>
+          </AppPopover>
         )}
       </div>
       {selected && (
@@ -134,30 +170,6 @@ export function SharedPeople({ trip }: { trip: Trip }) {
           </div>
         </div>
       )}
-      {viewer.id === trip.createdBy && token && (
-        <div className="shared-invite">
-          <Field
-            label={t("code")}
-            value={token}
-            readOnly
-            onFocus={(e) => e.target.select()}
-            hint={t("inviteHint")}
-          />
-          <AppButton
-            variant="outline"
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(token);
-                setNotice(t("copied"));
-              } catch {
-                setError(t("failed"));
-              }
-            }}
-          >
-            {t("copy")}
-          </AppButton>
-        </div>
-      )}
       {pending && <p role="status">{t("pending")}</p>}
       {error && <p role="alert">{error}</p>}
       {self && selected?.id === self.id && (
@@ -177,22 +189,33 @@ function MemberPreferencesForm({
   const m = useTranslations("mvp");
   const t = useTranslations("shared");
   const { refreshTrips, setNotice } = useMvp();
-  const [interests, setInterests] = useState(member.interests);
-  const [dislikes, setDislikes] = useState(member.dislikes);
-  const [food, setFood] = useState(member.food);
-  const [pace, setPace] = useState(member.pace);
-  const [budget, setBudget] = useState(String(member.budget || ""));
+  const [edits, setEdits] = useState<
+    Partial<{
+      interests: string;
+      dislikes: string;
+      food: string;
+      pace: Member["pace"];
+      budget: string;
+    }>
+  >({});
+  const interests = edits.interests ?? member.interests,
+    dislikes = edits.dislikes ?? member.dislikes,
+    food = edits.food ?? member.food,
+    pace = edits.pace ?? member.pace,
+    budget = edits.budget ?? String(member.budget || "");
+  const setInterests = (value: string) =>
+    setEdits((e) => ({ ...e, interests: value }));
+  const setDislikes = (value: string) =>
+    setEdits((e) => ({ ...e, dislikes: value }));
+  const setFood = (value: string) => setEdits((e) => ({ ...e, food: value }));
+  const setPace = (value: Member["pace"]) =>
+    setEdits((e) => ({ ...e, pace: value }));
+  const setBudget = (value: string) =>
+    setEdits((e) => ({ ...e, budget: value }));
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [budgetError, setBudgetError] = useState("");
-  // Adopt server state after realtime refreshes unless the user is typing.
-  useEffect(() => {
-    setInterests(member.interests);
-    setDislikes(member.dislikes);
-    setFood(member.food);
-    setPace(member.pace);
-    setBudget(String(member.budget || ""));
-  }, [member.interests, member.dislikes, member.food, member.pace, member.budget]);
+  // Untouched fields follow realtime data; typed values survive background refreshes.
   async function save(event: FormEvent) {
     event.preventDefault();
     const parsedBudget = budget.trim() === "" ? null : Number(budget);
@@ -284,45 +307,64 @@ export function AcceptInvite() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   return (
-    <details className="shared-join">
-      <summary>{t("join")}</summary>
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          if (pending) return;
-          setPending(true);
-          setError("");
-          try {
-            const result = await createClient().rpc("trip_invite_accept", {
-              p_token: code.trim(),
-              p_display_name: viewer.name,
-            });
-            if (result.error) throw result.error;
-            setCode("");
-            setNotice(t("joined"));
-            await refreshTrips();
-          } catch (err) {
-            setError(t(sharedError(err)));
-          } finally {
-            setPending(false);
-          }
-        }}
-      >
-        <Field
-          label={t("code")}
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          required
-          minLength={64}
-          maxLength={64}
-          autoComplete="off"
-          spellCheck={false}
-        />
-        <AppButton type="submit" disabled={pending || !code.trim()}>
-          {t("accept")}
-        </AppButton>
-        {error && <p role="alert">{error}</p>}
-      </form>
-    </details>
+    <AppPopover
+      label={t("join")}
+      className="mvp-button join-trip-trigger"
+      trigger={
+        <>
+          <UsersRound size={17} />
+          {t("join")}
+        </>
+      }
+    >
+      {(close) => (
+        <form
+          className="shared-join-form"
+          noValidate
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (pending) return;
+            if (!/^[a-f0-9]{64}$/i.test(code.trim())) {
+              setError(t("invalidInvite"));
+              e.currentTarget.querySelector("input")?.focus();
+              return;
+            }
+            setPending(true);
+            setError("");
+            try {
+              const result = await createClient().rpc("trip_invite_accept", {
+                p_token: code.trim(),
+                p_display_name: viewer.name,
+              });
+              if (result.error) throw result.error;
+              setCode("");
+              setNotice(t("joined"));
+              await refreshTrips();
+              close();
+            } catch (err) {
+              setError(t(sharedError(err)));
+            } finally {
+              setPending(false);
+            }
+          }}
+        >
+          <Field
+            label={t("code")}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            required
+            minLength={64}
+            maxLength={64}
+            autoComplete="off"
+            spellCheck={false}
+            error={error}
+          />
+          <AppButton type="submit" disabled={pending || !code.trim()}>
+            {t("accept")}
+          </AppButton>
+          {pending && <p role="status">{t("pending")}</p>}
+        </form>
+      )}
+    </AppPopover>
   );
 }

@@ -1,5 +1,18 @@
 # UX Contract
 
+## Current UI refinement contract (2026-09-13)
+
+This section supersedes historical theme/composer/share descriptions below.
+
+- Both App light/dark palettes are supported; AccountMenu owns the persisted choice. Dashboard/create have no inert Shared trip header badge.
+- Widget resize affordances are hidden and noninteractive outside Edit layout. Title padding remains intentional when the grip is absent. Journey edit/remove stay available beside a selected stop at compact/medium widths.
+- AI and group chat use one composer. Enter sends unless IME is composing; Shift+Enter inserts a line. AI renders real streamed Markdown, supports Stop, and retains received partial text when stopped. Raw HTML is skipped, links use safe URL handling, and model-provided images do not load remote resources.
+- Join is a named button opening the canonical AppPopover, with inline code validation and failure recovery. People creates the invitation in a compact portaled popover beside its trigger; no resize is needed to read/copy it.
+- Create stores optional travel style (maximum 400 characters) in the creator's existing per-trip `interests` preference, which AI member tools read. No new schema or global preference is introduced. If preference saving fails after trip creation, the form retains the created ID and retries without another create RPC. Currency/timezone/date/datalist controls retain native browser popup ownership. Wide-screen SVG is instructional; reduced motion shows a static complete diagram.
+- Share is a video export, not an invitation. Mediabunny runs on demand in the browser: AVC/MP4 where supported, VP9/WebM fallback, explicit unsupported/error states, progress, cancellation, preview and download. Every trip day and activity is included, with long days paginated; the duration is shown before export. Video uses names, dates, activity locations/durations/costs and estimated budget from the authorized loaded trip. No upload, external sending, map tile capture, soundtrack or server rendering is performed.
+- Canonical controls remain Field/AppButton and Base UI AppPopover. `trip/chat/message-composer.tsx` owns both chat entry surfaces; `lib/trips/video.ts` owns film scenes/encoding. Button text/background hover pairs are tested in light and dark themes.
+- Verification: `scripts/shared-workspace-smoke.cjs` covers edit gating, action placement, actual video encode/decode/download, incremental Markdown and existing shared workflows; `scripts/ui-polish-smoke.cjs` covers creation/join, preference-failure retry, contrast, three locales and narrow layouts. These use isolated backend/Google fixtures, not live service credentials. The strict static audit is recorded separately and is not claimed as passed if it times out.
+
 ## Current shared-data contract (2026-09-12)
 
 This section supersedes the older preview-only descriptions below for authenticated routes. Demo routes keep their original in-memory behavior and proposal rules.
@@ -156,3 +169,17 @@ Implementation plan refers to `Tripify — MVP Development Plan & Todo List.md` 
 | 24px information cards | `styleRule.md` distinguishes App from marketing | Product cards use 16px; marketing stays 24px, documented in DESIGN.md |
 | Route blue brand action | Existing auth App palette prioritizes small white-text contrast | MVP reuses scoped App action tokens, no marketing recolor |
 | Homepage scroll storytelling | Document §24 calls for a working decision interface | Product uses quiet hover/press and a responsive workspace, no pinned scrolling |
+
+## Itinerary planning workspace override (2026-09-12)
+
+This section supersedes the manual-routing and immediate-camera descriptions above for the authenticated map.
+
+- Source of truth: TripWorkspace owns day/selected activity/hover and one useRoutes result for Map and Planner. Chronological order is start time then stable ID, matching the server. No new itinerary store, table, route persistence or realtime subscription was introduced.
+- Routes: relevant day activity signatures trigger a 300ms update; title/cost changes do not trigger routing. Mode and day changes do. Successful server segments reuse the existing five-minute per-segment cache; unchanged valid geometry remains visible while refreshing. Missing coordinates are never bridged with a fake segment. Partial errors have a compact retry; live estimates are a tooltip, not a form row.
+- Schedule: the existing database models all saved start times as fixed. Activity duration and travel duration remain separate. The Planner and selected route labels show derived arrival conflicts without rescheduling. Map placement chooses a day/neighbor and a start time consistent with that chronological position. AI recommendations are advisory drafts; explicit Add confirms the chosen fixed time. Flexible time windows and persisted AI time provenance are not represented by the existing schema.
+- Discovery: explicit Enter/search-button submission (including Search this area) avoids paid requests on keystrokes, IME composition or map drag. Clear cancels pending result adoption; bounded requests ignore stale responses. Google POIs and search results use the same real Place detail preview. Coordinates use the same activity model. An empty itinerary still has a searchable map.
+- Placement ranking: the new authenticated read-only `/api/maps/placement` endpoint shortlists at most four geographic slots and calls the existing cached route service for their travel costs. It checks duration, fixed schedule gaps and recurring Google opening periods when supplied. Unknown travel/hours stay unknown. This is a bounded suggestion, not a proof of global optimality or holiday opening. The existing read-only AI endpoint explains those facts; it never applies the change.
+- Canonical create behavior: creator-only `mutateSharedTrip(activity.add)` preserves backend authorization, expected-version transaction and history/realtime reconciliation. Members can discover but cannot write. No costs are invented; entered cost feeds the existing budget derivation. Duplicate submissions are locked while pending. A successful RPC followed by a failed refresh is a saved/reload state, never another Add. Stale-version errors retain the form and require review before retry.
+- Overlay ownership: Base UI Dialog owns the placement modal's focus trap, Escape, outside-pointer protection and restoration. Closing to the same preview retains the mounted draft; changing/closing the selected place discards it. Dismissal is blocked during save. AppPopover owns More, AppTooltip owns estimate details; native select/day/time retain the existing OS-popup contract. Discovery query is transient session UI, not a shareable URL filter.
+- Camera: smooth pan/Planner scroll respects reduced motion; explicit fit and initial framing stay immediate. Marker keyboard buttons expose stop/title/time and selected state. Existing widget Focus owns fullscreen; no duplicate browser fullscreen state.
+- Evidence: `scripts/map-planning.test.cjs` checks schedule/overnight hours/order/cache/auth guards. `scripts/map-planning-smoke.cjs` exercises real React map/Planner components with isolated SDK/RPC fixtures. Those tests do not prove live Google billing/key access, Supabase persistence or multi-user delivery.

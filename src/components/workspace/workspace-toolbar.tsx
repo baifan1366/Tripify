@@ -1,11 +1,17 @@
 "use client";
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { LayoutGrid, Pencil, Plus, Printer, RotateCcw, Undo2 } from "lucide-react";
+import {
+  LayoutGrid,
+  Pencil,
+  Plus,
+  Printer,
+  RotateCcw,
+  Undo2,
+} from "lucide-react";
 import { AppPopover } from "@/components/ui/app-popover";
 import { WIDGET_ORDER, type PresetId } from "./widget-registry";
 import { useWorkspaceGrid, type WidgetId } from "./workspace-layout-context";
-import { ThemeToggle } from "./theme-toggle";
 
 const PRESET_IDS: PresetId[] = ["default", "planning", "explore", "decision"];
 
@@ -22,7 +28,11 @@ export function WorkspaceToolbar({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.key.toLowerCase() !== "z")
+      if (
+        !(e.metaKey || e.ctrlKey) ||
+        e.shiftKey ||
+        e.key.toLowerCase() !== "z"
+      )
         return;
       const el = e.target as HTMLElement | null;
       if (el?.closest("input, textarea, select, [contenteditable]")) return;
@@ -157,7 +167,6 @@ export function WorkspaceToolbar({
           <Printer size={15} aria-hidden="true" />
           <span>{t("printTrip")}</span>
         </button>
-        <ThemeToggle />
       </div>
       {hidden.length > 0 && (
         <div className="dock-minimized" aria-label={t("minimized")}>

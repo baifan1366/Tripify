@@ -98,6 +98,10 @@ export function createClient() {
     },
     async rpc(name, args) {
       database.calls.push({ name, args });
+      if (name === "trip_create")
+        return { data: { trip: { id: tripId } }, error: null };
+      if (name === "trip_member_preferences" && database.failPreferences)
+        return { error: { message: "NETWORK" } };
       if (name === "trip_invite_create")
         return { data: { token: "a".repeat(64) }, error: null };
       if (name === "trip_member_remove") {

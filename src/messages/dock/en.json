@@ -104,5 +104,15 @@
   "presenceViewing": "Viewing now",
   "printTrip": "Print / PDF",
   "darkMode": "Dark mode",
-  "lightMode": "Light mode"
+  "lightMode": "Light mode",
+  "appearance": "Appearance",
+  "filmIntro": "Export your trip as a video, with every day, activity and planned cost. The file is generated on this device.",
+  "filmEmpty": "A day to explore",
+  "filmSummary": "Your trip at a glance",
+  "filmPreview": "Trip video preview",
+  "filmLength": "About {seconds} seconds · silent video",
+  "filmExport": "Create video",
+  "filmDownload": "Download video",
+  "filmUnsupported": "Video encoding is unavailable in this browser. Try the latest Chrome or Edge.",
+  "filmFailed": "The video could not be created. Please try again."
 }

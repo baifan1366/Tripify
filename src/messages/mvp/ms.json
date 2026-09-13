@@ -87,5 +87,17 @@
   "aiReduceFailed": "Tripify AI tidak tersedia buat masa ini. Bajet tidak berubah — cuba lagi.",
   "aiStop": "Henti",
   "aiRetry": "Cuba semula",
-  "useAsProposal": "Simpan sebagai draf cadangan"
+  "useAsProposal": "Simpan sebagai draf cadangan",
+  "travelStyle": "Gaya perjalanan",
+  "travelStylePlaceholder": "Tarikan popular, percutian santai, makanan…",
+  "styleSights": "Tarikan dan tempat terkenal",
+  "styleRelax": "Percutian santai",
+  "styleFood": "Makanan dan budaya tempatan",
+  "styleAdventure": "Alam semula jadi dan pengembaraan",
+  "createdRetry": "Perjalanan telah dicipta. Cuba lagi untuk menyimpan pilihan dan membukanya.",
+  "previewTitle": "Satu ruang untuk seluruh perjalanan",
+  "previewBody": "Rancang setiap hari, hubungkan hentian pada peta dan bincangkan idea bersama.",
+  "previewStepPlan": "Susun aktiviti harian",
+  "previewStepMap": "Terokai tempat dan laluan",
+  "previewStepAi": "Rancang bersama AI dan rakan"
 }

@@ -1,14 +1,11 @@
 "use client";
-import { memo, useState } from "react";
+import { memo } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, MapPin, Share2, Users } from "lucide-react";
+import { CalendarDays, MapPin, Users } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useMvp } from "@/components/mvp/mvp-provider";
-import { AppButton, Field } from "@/components/mvp/primitives";
-import { AppPopover } from "@/components/ui/app-popover";
-import { createClient } from "@/lib/supabase/client";
-import { sharedError } from "@/lib/trips/repository";
 import { dateAt, estimatedTotal, type Trip } from "@/lib/mvp/model";
+import { ShareTripVideo } from "@/components/trip/video/share-trip-video";
 import { TripSwitcher } from "./trip-switcher";
 
 export const TripHeader = memo(function TripHeader({
@@ -71,7 +68,7 @@ export const TripHeader = memo(function TripHeader({
         </p>
       </div>
       <div className="mvp-trip-header-end">
-        <ShareTripButton trip={trip} />
+        <ShareTripVideo trip={trip} />
         <Link
           href={url("people")}
           className="mvp-avatar-group"
@@ -103,91 +100,5 @@ export const TripHeader = memo(function TripHeader({
         </Link>
       </div>
     </header>
-  );
-});
-
-const ShareTripButton = memo(function ShareTripButton({
-  trip,
-}: {
-  trip: Trip;
-}) {
-  const shared = useTranslations("shared");
-  const d = useTranslations("dock");
-  const { viewer, setNotice } = useMvp();
-  const [token, setToken] = useState("");
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState("");
-  // Same rule as People: only the creator can mint invite codes (the RPC
-  // enforces this server-side too; non-creators get no button at all).
-  if (viewer.id !== trip.createdBy) return null;
-  async function invite() {
-    setPending(true);
-    setError("");
-    try {
-      const result = await createClient().rpc("trip_invite_create", {
-        p_trip: trip.id,
-      });
-      if (result.error) throw result.error;
-      setToken(result.data.token);
-    } catch (e) {
-      setError(shared(sharedError(e)));
-    } finally {
-      setPending(false);
-    }
-  }
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(token);
-      setNotice(shared("copied"));
-    } catch {
-      setError(shared("failed"));
-    }
-  }
-  return (
-    <AppPopover
-      className="mvp-share-trigger"
-      label={d("shareTrip")}
-      trigger={
-        <>
-          <Share2 size={16} aria-hidden="true" />
-          {d("shareTrip")}
-        </>
-      }
-    >
-      <div className="mvp-share-panel">
-        {!token ? (
-          <>
-            <p className="mvp-muted">{shared("inviteHint")}</p>
-            <AppButton disabled={pending} onClick={() => void invite()}>
-              {shared("invite")}
-            </AppButton>
-          </>
-        ) : (
-          <>
-            <Field
-              label={shared("code")}
-              value={token}
-              readOnly
-              onFocus={(e) => e.target.select()}
-              hint={shared("inviteHint")}
-            />
-            <div className="mvp-form-actions">
-              <AppButton
-                variant="outline"
-                disabled={pending}
-                onClick={() => void invite()}
-              >
-                {shared("invite")}
-              </AppButton>
-              <AppButton disabled={pending} onClick={() => void copy()}>
-                {shared("copy")}
-              </AppButton>
-            </div>
-          </>
-        )}
-        {pending && <p role="status">{shared("pending")}</p>}
-        {error && <p role="alert">{error}</p>}
-      </div>
-    </AppPopover>
   );
 });

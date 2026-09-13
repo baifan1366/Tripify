@@ -36,6 +36,7 @@ export type Trip = {
   members: Member[];
 };
 export type TripDraft = {
+  travelStyle?: string;
   name: string;
   destination: string;
   start: string;
@@ -46,6 +47,7 @@ export type TripDraft = {
 };
 
 export const emptyDraft: TripDraft = {
+  travelStyle: "",
   name: "",
   destination: "",
   start: "",
@@ -82,5 +84,3 @@ export function forecastTotal(trip: Trip) {
   const average = activeDays > 0 ? planned / activeDays : 0;
   return planned + average * Math.max(0, days - activeDays);
 }
-
-

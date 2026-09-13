@@ -6,6 +6,7 @@ import { AppRail } from "@/components/app-shell/app-rail";
 import { useMvp } from "./mvp-provider";
 import "./mvp.css";
 import "../app-shell/app-shell.css";
+import { ThemeAppearance } from "@/components/workspace/theme-toggle";
 
 export function MvpShell({ children }: { children: React.ReactNode }) {
   const t = useTranslations("mvp");
@@ -20,12 +21,8 @@ export function MvpShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="mvp-shell app-shell trip-app-theme">
       <AppRail />
+      <ThemeAppearance />
       <div className="mvp-body">
-        <header className="app-shell-chrome">
-          <span className="app-preview-badge" title={shared("sharedNote")}>
-            {shared("shared")}
-          </span>
-        </header>
         {notice && (
           <div className="mvp-toast" role="status" key={notice}>
             <span>{notice}</span>
