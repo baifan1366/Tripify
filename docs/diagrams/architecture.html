@@ -50,9 +50,12 @@
 </head>
 <body>
   <div class="frame">
-    <svg viewBox="0 0 1000 700" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="tripify-arch-title tripify-arch-desc">
+    <p class="eyebrow">Architecture · Tripify</p>
+    <h1>AI proposes. Humans decide.</h1>
+
+    <svg viewBox="0 0 1000 1020" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="tripify-arch-title tripify-arch-desc">
       <title id="tripify-arch-title">Tripify system architecture</title>
-      <desc id="tripify-arch-desc">Tripify's Next.js frontend and backend sit on top of Supabase for state and the Tripify AI Agent for research and replanning, which calls Google Places, Google Routes, Open-Meteo, and web search.</desc>
+      <desc id="tripify-arch-desc">The pinboard workspace writes to a versioned shared trip state in Supabase; a LangGraph workflow of Researcher, Recommendation Engine, Planner and Critic produces a structured proposal that only enters the trip after a human vote and version validation. Budget risk and backup plans feed an external-reality observer that triggers targeted replanning through the proposal loop.</desc>
       <defs>
         <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
         <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
@@ -61,115 +64,181 @@
 
       <rect width="100%" height="100%" fill="#f5f5f5"/>
 
-      <!-- External zone (drawn first) -->
-      <rect x="120" y="440" width="760" height="180" rx="8"
-            fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
-      <rect x="164" y="444" width="110" height="16" rx="2" fill="#f5f5f5"/>
-      <text x="219" y="456" fill="rgba(45,49,66,0.40)" font-size="10"
-            font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">EXTERNAL APIS</text>
-
-      <!-- Arrows (before nodes) -->
-      <line x1="500" y1="112" x2="500" y2="156" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
-      <rect x="508" y="126" width="56" height="16" rx="2" fill="#f5f5f5"/>
-      <text x="536" y="138" fill="#7a8399" font-size="11" font-family="'Geist Mono', monospace" letter-spacing="0.06em">HTTPS</text>
-
-      <path d="M 420,240 V 272 Q 420,280 412,280 H 248 Q 240,280 240,288 V 316"
-            fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
-      <rect x="292" y="260" width="76" height="16" rx="2" fill="#f5f5f5"/>
-      <text x="330" y="272" fill="#7a8399" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">SQL · RLS</text>
-
-      <path d="M 580,240 V 272 Q 580,280 588,280 H 752 Q 760,280 760,288 V 316"
+      <!-- ============ Arrows (before nodes) ============ -->
+      <!-- Workspace -> Shared Trip State -->
+      <line x1="500" y1="102" x2="500" y2="136" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Shared Trip State -> LangGraph (agent API) -->
+      <line x1="500" y1="220" x2="500" y2="256" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+      <rect x="510" y="230" width="84" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="552" y="242" fill="#7a8399" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">AGENT API</text>
+      <!-- Research tools -> Researcher (tool calls) -->
+      <line x1="180" y1="327" x2="216" y2="327" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+      <!-- Critic -> Proposal row (to first boundary node) -->
+      <path d="M 772,358 V 400 Q 772,408 764,408 H 168 Q 160,408 160,416 V 432"
             fill="none" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
-      <rect x="636" y="260" width="84" height="16" rx="2" fill="#f5f5f5"/>
-      <text x="678" y="272" fill="#7a8399" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">AGENT API</text>
-
-      <path d="M 760,392 V 436"
-            fill="none" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
-      <rect x="772" y="406" width="88" height="16" rx="2" fill="#f5f5f5"/>
-      <text x="816" y="418" fill="#7a8399" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">TOOL CALLS</text>
-
-      <path d="M 160,356 H 104 Q 96,356 96,348 V 104 Q 96,96 104,96 H 376"
+      <!-- Chain arrows inside proposal boundary -->
+      <line x1="250" y1="466" x2="286" y2="466" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="480" y1="466" x2="516" y2="466" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="710" y1="466" x2="746" y2="466" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Apply approved ops -> versioned state (back to Supabase) -->
+      <path d="M 920,436 V 196 H 748" fill="none" stroke="#eb6c36" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow-accent)"/>
+      <text x="932" y="382" fill="#7a8399" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em" transform="rotate(-90 932 382)">VERSION WRITE</text>
+      <!-- Apply approved ops -> budget / backup row -->
+      <path d="M 845,496 V 524 H 290 V 552" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="710" y1="496" x2="710" y2="552" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Budget + Backup -> External reality -->
+      <path d="M 290,616 V 640 H 430 V 656" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 710,616 V 640 H 550 V 656" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- External reality -> Observer -> Smart alert -->
+      <line x1="490" y1="724" x2="490" y2="752" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="490" y1="820" x2="490" y2="848" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Smart alert -> proposal loop (dashed accent) -->
+      <path d="M 700,884 H 960 V 466 H 948" fill="none" stroke="#eb6c36" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow-accent)"/>
+      <text x="952" y="680" fill="rgba(235,108,54,0.80)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end" letter-spacing="0.10em">PROPOSAL LOOP</text>
+      <!-- Realtime sync (dashed, workspace <-> state) -->
+      <path d="M 256,176 H 120 Q 112,176 112,168 V 84 Q 112,76 120,76 H 252"
             fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
-      <rect x="44" y="220" width="56" height="16" rx="2" fill="#f5f5f5"/>
-      <text x="72" y="232" fill="#7a8399" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">REALTIME</text>
+      <rect x="40" y="120" width="72" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="76" y="132" fill="#7a8399" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">REALTIME</text>
 
-      <!-- Nodes -->
-      <!-- Tripify UI -->
-      <rect x="380" y="40" width="240" height="72" rx="6" fill="#f5f5f5"/>
-      <rect x="380" y="40" width="240" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
-      <rect x="388" y="46" width="48" height="16" rx="2" fill="none" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
-      <text x="412" y="58" fill="rgba(45,49,66,0.80)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CLIENT</text>
-      <text x="500" y="80" fill="#2d3142" font-size="16" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Tripify UI</text>
-      <text x="500" y="98" fill="#4f5d75" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle">chat · itinerary · map · budget</text>
+      <!-- ============ Nodes ============ -->
+      <!-- Tripify Workspace -->
+      <rect x="260" y="30" width="480" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="260" y="30" width="480" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="268" y="36" width="70" height="16" rx="2" fill="none" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="303" y="48" fill="rgba(45,49,66,0.80)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CLIENT</text>
+      <text x="500" y="70" fill="#2d3142" font-size="16" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Tripify Workspace</text>
+      <text x="500" y="88" fill="#4f5d75" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle">map · itinerary · budget · planner · alerts · decisions</text>
 
-      <!-- Next.js backend -->
-      <rect x="340" y="160" width="320" height="80" rx="6" fill="#f5f5f5"/>
-      <rect x="340" y="160" width="320" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
-      <rect x="348" y="166" width="58" height="16" rx="2" fill="none" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
-      <text x="377" y="178" fill="rgba(45,49,66,0.80)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SERVER</text>
-      <text x="500" y="204" fill="#2d3142" font-size="16" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Next.js Backend</text>
-      <text x="500" y="222" fill="#4f5d75" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle">auth · trip · proposal · vote APIs</text>
+      <!-- Shared Trip State -->
+      <rect x="260" y="140" width="480" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="260" y="140" width="480" height="80" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <rect x="268" y="146" width="32" height="16" rx="2" fill="none" stroke="rgba(79,93,117,0.40)" stroke-width="0.8"/>
+      <text x="284" y="158" fill="rgba(79,93,117,0.80)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DB</text>
+      <text x="500" y="174" fill="#2d3142" font-size="16" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Shared Trip State — Supabase</text>
+      <text x="500" y="192" fill="#4f5d75" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle">members · activities · budget · proposals · votes</text>
+      <text x="500" y="208" fill="#4f5d75" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle">trip_events · version · primary/backup links · realtime</text>
 
-      <!-- Supabase -->
-      <rect x="160" y="320" width="160" height="72" rx="6" fill="#f5f5f5"/>
-      <rect x="160" y="320" width="160" height="72" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
-      <rect x="168" y="326" width="32" height="16" rx="2" fill="none" stroke="rgba(79,93,117,0.40)" stroke-width="0.8"/>
-      <text x="184" y="338" fill="rgba(79,93,117,0.80)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DB</text>
-      <text x="240" y="360" fill="#2d3142" font-size="16" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Supabase</text>
-      <text x="240" y="378" fill="#4f5d75" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle">PostgreSQL · Realtime</text>
+      <!-- LangGraph Orchestration container (old block removed) -->
 
-      <!-- AI Agent (focal) -->
-      <rect x="660" y="320" width="200" height="72" rx="6" fill="#f5f5f5"/>
-      <rect x="660" y="320" width="200" height="72" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
-      <rect x="668" y="326" width="32" height="16" rx="2" fill="none" stroke="rgba(235,108,54,0.40)" stroke-width="0.8"/>
-      <text x="684" y="338" fill="rgba(235,108,54,0.80)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AI</text>
-      <text x="760" y="360" fill="#2d3142" font-size="16" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Tripify AI Agent</text>
-      <text x="760" y="378" fill="#4f5d75" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle">research · recommend · replan</text>
+      <!-- Research tools (behind Researcher) -->
+      <rect x="15" y="262" width="165" height="118" rx="8" fill="#f5f5f5"/>
+      <rect x="15" y="262" width="165" height="118" rx="8" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <rect x="27" y="274" width="86" height="16" rx="2" fill="none" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+      <text x="70" y="286" fill="rgba(45,49,66,0.60)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">RESEARCH</text>
+      <text x="97" y="314" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Google Places</text>
+      <text x="97" y="332" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Google Routes</text>
+      <text x="97" y="350" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Open-Meteo</text>
+      <text x="97" y="368" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle">web search · sources</text>
 
-      <!-- External nodes -->
-      <rect x="144" y="472" width="160" height="64" rx="6" fill="#f5f5f5"/>
-      <rect x="144" y="472" width="160" height="64" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
-      <rect x="152" y="478" width="42" height="16" rx="2" fill="none" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
-      <text x="173" y="490" fill="rgba(45,49,66,0.60)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">API</text>
-      <text x="224" y="510" fill="#2d3142" font-size="16" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Google Places</text>
-      <text x="224" y="528" fill="#4f5d75" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle">places · reviews</text>
+      <!-- LangGraph Orchestration container -->
+      <rect x="200" y="262" width="650" height="118" rx="8" fill="rgba(235,108,54,0.05)" stroke="rgba(235,108,54,0.45)" stroke-width="1"/>
+      <rect x="212" y="274" width="32" height="16" rx="2" fill="none" stroke="rgba(235,108,54,0.40)" stroke-width="0.8"/>
+      <text x="228" y="286" fill="rgba(235,108,54,0.80)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AI</text>
+      <text x="254" y="286" fill="rgba(235,108,54,0.80)" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LANGGRAPH ORCHESTRATION</text>
 
-      <rect x="328" y="472" width="160" height="64" rx="6" fill="#f5f5f5"/>
-      <rect x="328" y="472" width="160" height="64" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
-      <rect x="336" y="478" width="42" height="16" rx="2" fill="none" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
-      <text x="357" y="490" fill="rgba(45,49,66,0.60)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">API</text>
-      <text x="408" y="510" fill="#2d3142" font-size="16" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Google Routes</text>
-      <text x="408" y="528" fill="#4f5d75" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle">travel times</text>
+      <rect x="222" y="296" width="140" height="62" rx="6" fill="#f5f5f5"/>
+      <rect x="222" y="296" width="140" height="62" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="292" y="322" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Researcher</text>
+      <text x="292" y="340" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle">evidence</text>
 
-      <rect x="512" y="472" width="160" height="64" rx="6" fill="#f5f5f5"/>
-      <rect x="512" y="472" width="160" height="64" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
-      <rect x="520" y="478" width="42" height="16" rx="2" fill="none" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
-      <text x="541" y="490" fill="rgba(45,49,66,0.60)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">API</text>
-      <text x="592" y="510" fill="#2d3142" font-size="16" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Open-Meteo</text>
-      <text x="592" y="528" fill="#4f5d75" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle">weather forecasts</text>
+      <line x1="362" y1="327" x2="378" y2="327" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
 
-      <rect x="696" y="472" width="160" height="64" rx="6" fill="#f5f5f5"/>
-      <rect x="696" y="472" width="160" height="64" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
-      <rect x="704" y="478" width="48" height="16" rx="2" fill="none" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
-      <text x="728" y="490" fill="rgba(45,49,66,0.60)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">API</text>
-      <text x="776" y="510" fill="#2d3142" font-size="16" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Web Search</text>
-      <text x="776" y="528" fill="#4f5d75" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle">reddit · guides</text>
+      <rect x="382" y="296" width="140" height="62" rx="6" fill="#f5f5f5"/>
+      <rect x="382" y="296" width="140" height="62" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="452" y="318" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Recommendation</text>
+      <text x="452" y="336" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle">group fit · value</text>
+
+      <line x1="522" y1="327" x2="538" y2="327" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <rect x="542" y="296" width="140" height="62" rx="6" fill="#f5f5f5"/>
+      <rect x="542" y="296" width="140" height="62" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="612" y="322" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Planner</text>
+      <text x="612" y="340" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle">operations</text>
+
+      <line x1="682" y1="327" x2="698" y2="327" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <rect x="702" y="296" width="140" height="62" rx="6" fill="#f5f5f5"/>
+      <rect x="702" y="296" width="140" height="62" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="772" y="322" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Critic</text>
+      <text x="772" y="340" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle">validation</text>
+
+      <!-- Proposal write boundary -->
+      <text x="60" y="424" fill="rgba(235,108,54,0.80)" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.14em">PROPOSAL WRITE BOUNDARY</text>
+
+      <rect x="60" y="436" width="190" height="60" rx="6" fill="#f5f5f5"/>
+      <rect x="60" y="436" width="190" height="60" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+      <text x="155" y="462" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Structured Proposal</text>
+      <text x="155" y="480" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle">before / after diff</text>
+
+      <rect x="290" y="436" width="190" height="60" rx="6" fill="#f5f5f5"/>
+      <rect x="290" y="436" width="190" height="60" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+      <text x="385" y="462" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Human Vote / Decision</text>
+      <text x="385" y="480" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle">with reasons</text>
+
+      <rect x="520" y="436" width="190" height="60" rx="6" fill="#f5f5f5"/>
+      <rect x="520" y="436" width="190" height="60" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+      <text x="615" y="462" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Version Validation</text>
+      <text x="615" y="480" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle">reject / rebase stale</text>
+
+      <rect x="750" y="436" width="190" height="60" rx="6" fill="#f5f5f5"/>
+      <rect x="750" y="436" width="190" height="60" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+      <text x="845" y="462" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Approved Ops Only</text>
+      <text x="845" y="480" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle">version increment</text>
+
+      <!-- Budget / Backup row -->
+      <rect x="140" y="556" width="300" height="60" rx="6" fill="#f5f5f5"/>
+      <rect x="140" y="556" width="300" height="60" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="290" y="582" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Budget Forecast / Risk</text>
+      <text x="290" y="600" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle">current · expected · remaining</text>
+
+      <rect x="560" y="556" width="300" height="60" rx="6" fill="#f5f5f5"/>
+      <rect x="560" y="556" width="300" height="60" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="710" y="582" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Primary + Backup Plans</text>
+      <text x="710" y="600" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle">conditional fallbacks</text>
+
+      <!-- External reality -->
+      <rect x="280" y="660" width="420" height="64" rx="6" fill="#f5f5f5"/>
+      <rect x="280" y="660" width="420" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="288" y="666" width="104" height="16" rx="2" fill="none" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="340" y="678" fill="rgba(45,49,66,0.80)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">TRIP EVENTS</text>
+      <text x="490" y="694" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">External Reality</text>
+      <text x="490" y="712" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle">weather · simulated flight delay</text>
+
+      <!-- Rule-based AI Observer -->
+      <rect x="280" y="756" width="420" height="64" rx="6" fill="#f5f5f5"/>
+      <rect x="280" y="756" width="420" height="64" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <rect x="288" y="762" width="70" height="16" rx="2" fill="none" stroke="rgba(79,93,117,0.40)" stroke-width="0.8"/>
+      <text x="323" y="774" fill="rgba(79,93,117,0.80)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">FILTER</text>
+      <text x="490" y="790" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Rule-based AI Observer</text>
+      <text x="490" y="808" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle">relevant event only? · affected-activity check</text>
+
+      <!-- Smart Alert / Targeted Replanning -->
+      <rect x="280" y="852" width="420" height="64" rx="6" fill="#f5f5f5"/>
+      <rect x="280" y="852" width="420" height="64" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+      <rect x="288" y="858" width="70" height="16" rx="2" fill="none" stroke="rgba(235,108,54,0.40)" stroke-width="0.8"/>
+      <text x="323" y="870" fill="rgba(235,108,54,0.80)" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ALERT</text>
+      <text x="490" y="886" fill="#2d3142" font-size="13" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Smart Alert / Targeted Replanning</text>
+      <text x="490" y="904" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" text-anchor="middle">prepared alternatives · targeted proposal</text>
+
+      <!-- Footnote -->
+      <text x="280" y="938" fill="#7a8399" font-size="11" font-family="'Geist Mono', monospace" letter-spacing="0.04em">Post-MVP background: Supabase event → QStash → Vercel Function → Observer / Proposal</text>
 
       <!-- Legend -->
-      <line x1="30" y1="652" x2="970" y2="652" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
-      <text x="30" y="675" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEGEND</text>
-      <rect x="110" y="665" width="20" height="16" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
-      <text x="138" y="677" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Application layer</text>
-      <rect x="264" y="665" width="20" height="16" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
-      <text x="292" y="677" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Data store</text>
-      <rect x="388" y="665" width="20" height="16" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
-      <text x="416" y="677" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">AI agent</text>
-      <rect x="500" y="665" width="20" height="16" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
-      <text x="528" y="677" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">External API</text>
-      <line x1="636" y1="673" x2="668" y2="673" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3"/>
-      <text x="676" y="677" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Realtime sync</text>
-      <line x1="790" y1="673" x2="822" y2="673" stroke="#2e5aa8" stroke-width="1.2"/>
-      <text x="830" y="677" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Tool calls</text>
+      <line x1="30" y1="962" x2="970" y2="962" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <text x="30" y="986" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEGEND</text>
+      <rect x="110" y="975" width="20" height="16" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="138" y="987" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Application layer</text>
+      <rect x="268" y="975" width="20" height="16" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="296" y="987" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Data store</text>
+      <rect x="390" y="975" width="20" height="16" rx="2" fill="rgba(235,108,54,0.05)" stroke="rgba(235,108,54,0.45)" stroke-width="1"/>
+      <text x="418" y="987" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Agent workflow</text>
+      <rect x="528" y="975" width="20" height="16" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+      <text x="556" y="987" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Decision boundary</text>
+      <rect x="702" y="975" width="20" height="16" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="730" y="987" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">External data</text>
+      <line x1="828" y1="983" x2="860" y2="983" stroke="#eb6c36" stroke-width="1.2" stroke-dasharray="4,3"/>
+      <text x="868" y="987" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Write-back</text>
     </svg>
   </div>
 </body>

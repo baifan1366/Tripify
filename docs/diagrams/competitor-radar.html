@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Competitive Radar — Tripify vs Mindtrip, Wanderlog, ChatGPT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --paper:   #F9F4EB;
+    --ink:     #1E3A5F;
+    --muted:   #8A8478;
+    --grid:    #E5E1D8;
+    --tripify: #F26522;
+    --mindtrip:#A8B878;
+    --wander:  #8B9DC3;
+    --chatgpt: #D9B06A;
+  }
+  body {
+    font-family: 'Poppins', system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    width: 1774px;
+    height: 892px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  svg { display: block; }
+  text { user-select: none; }
+</style>
+</head>
+<body>
+<svg width="1774" height="892" viewBox="0 0 1774 892" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="radar-title radar-desc">
+  <title id="radar-title">Competitive radar: Tripify vs Mindtrip, Wanderlog, ChatGPT</title>
+  <desc id="radar-desc">Five-axis radar comparing Tripify, Mindtrip, Wanderlog and ChatGPT on AI research, shared group planning, itinerary and map, preference-aware group suggestions, and the group decision layer. Only Tripify is strong on all five.</desc>
+
+  <rect width="100%" height="100%" fill="#F9F4EB"/>
+
+  <!-- ===== Radar geometry =====
+       center (887, 415), max radius 300, 5 axes (top, then clockwise) -->
+  <g id="grid">
+    <!-- rings at 2,4,6,8,10 -->
+    <g id="rings" fill="none" stroke="#E5E1D8" stroke-width="1.5"></g>
+    <!-- spokes -->
+    <g id="spokes" stroke="#E5E1D8" stroke-width="1.5"></g>
+  </g>
+
+  <!-- tick labels on vertical spoke -->
+  <g id="ticks" font-family="'Poppins', sans-serif" font-size="17" font-weight="500" fill="#B7B1A4" text-anchor="middle"></g>
+
+  <!-- series polygons (drawn below by script order: weakest first, Tripify last) -->
+  <g id="series"></g>
+
+  <!-- axis labels -->
+  <g id="axis-labels" font-family="'Poppins', sans-serif" font-size="30" font-weight="700" fill="#1E3A5F" text-anchor="middle"></g>
+
+  <!-- divider -->
+  <line x1="180" y1="770" x2="1594" y2="770" stroke="#E5E1D8" stroke-width="1.5"/>
+
+  <!-- legend -->
+  <g id="legend" font-family="'Poppins', sans-serif" font-size="19" font-weight="500" fill="#1E3A5F"></g>
+  <text x="1594" y="822" font-family="'Instrument Serif', serif" font-style="italic" font-size="21" fill="#9A9488" text-anchor="end">Only Tripify owns the decision layer.</text>
+
+  <script><![CDATA[
+    const CX = 887, CY = 415, R = 300, N = 5;
+    const axes = [
+      { label: 'Group Decision Layer', sub: 'proposals · voting · versioning' },
+      { label: 'AI Research',          sub: 'planning & recommendations' },
+      { label: 'Preference Fit',       sub: 'group-fit & trade-offs' },
+      { label: 'Itinerary + Map',      sub: 'interactive & shared' },
+      { label: 'Group Collaboration',  sub: 'shared trip state' },
+    ];
+    // scores 0–10
+    const series = [
+      { name: 'ChatGPT',  color: '#D9B06A', scores: [1.5, 8.5, 5, 5, 4] },
+      { name: 'Wanderlog',color: '#8B9DC3', scores: [3, 9, 7, 9, 8] },
+      { name: 'Mindtrip', color: '#A8B878', scores: [3, 9, 7, 9, 9] },
+      { name: 'Tripify',  color: '#F26522', scores: [9.5, 9, 9.5, 9, 9], markers: true },
+    ];
+
+    const angle = i => -Math.PI / 2 + (2 * Math.PI * i) / N; // top, clockwise
+    const pt = (i, v) => [CX + R * (v / 10) * Math.cos(angle(i)), CY - R * (v / 10) * Math.sin(angle(i))];
+
+    const rings = document.getElementById('rings');
+    for (let ring = 2; ring <= 10; ring += 2) {
+      const pts = axes.map((_, i) => pt(i, ring).join(',')).join(' ');
+      const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      poly.setAttribute('points', pts);
+      rings.appendChild(poly);
+    }
+    const spokes = document.getElementById('spokes');
+    axes.forEach((_, i) => {
+      const [x, y] = pt(i, 10);
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', CX); line.setAttribute('y1', CY);
+      line.setAttribute('x2', x);  line.setAttribute('y2', y);
+      spokes.appendChild(line);
+    });
+    const ticks = document.getElementById('ticks');
+    for (let v = 2; v <= 10; v += 2) {
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', CX - 24); t.setAttribute('y', CY - R * (v / 10) + 6);
+      t.textContent = v;
+      ticks.appendChild(t);
+    }
+    const seriesG = document.getElementById('series');
+    series.forEach(s => {
+      const pts = s.scores.map((v, i) => pt(i, v).join(',')).join(' ');
+      const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      poly.setAttribute('points', pts);
+      poly.setAttribute('fill', s.color);
+      poly.setAttribute('fill-opacity', '0.14');
+      poly.setAttribute('stroke', s.color);
+      poly.setAttribute('stroke-width', '2.5');
+      poly.setAttribute('stroke-linejoin', 'round');
+      seriesG.appendChild(poly);
+      if (s.markers) s.scores.forEach((v, i) => {
+        const [x, y] = pt(i, v);
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', 7);
+        c.setAttribute('fill', s.color);
+        seriesG.appendChild(c);
+      });
+    });
+    const labels = document.getElementById('axis-labels');
+    const subs = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    axes.forEach((a, i) => {
+      const ang = angle(i);
+      const [x, y] = pt(i, 10);
+      const lx = x + 120 * Math.cos(ang);
+      const ly = y - 120 * Math.sin(ang) + 10;
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', lx); t.setAttribute('y', ly); t.textContent = a.label;
+      labels.appendChild(t);
+      const st = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      st.setAttribute('x', lx);
+      st.setAttribute('y', ly + 28);
+      st.setAttribute('font-size', '16');
+      st.setAttribute('font-weight', '500');
+      st.setAttribute('fill', '#8A8478');
+      st.setAttribute('font-family', "'Poppins', sans-serif");
+      st.textContent = a.sub;
+      labels.appendChild(st);
+    });
+    const legend = document.getElementById('legend');
+    let lx = 180;
+    series.forEach(s => {
+      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x', lx); rect.setAttribute('y', 800);
+      rect.setAttribute('width', 26); rect.setAttribute('height', 16); rect.setAttribute('rx', 4);
+      rect.setAttribute('fill', s.color); rect.setAttribute('fill-opacity', '0.85');
+      legend.appendChild(rect);
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', lx + 36); t.setAttribute('y', 814); t.textContent = s.name;
+      legend.appendChild(t);
+      lx += 36 + s.name.length * 12 + 56;
+    });
+  ]]></script>
+</svg>
+</body>
+</html>
